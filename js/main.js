@@ -7,16 +7,45 @@ import { renderProjectionChart, renderComparisonChart } from './charts.js';
 initCosmos('cosmos-bg');
 
 let currentTaxMode = 'simple';
+let debounceTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initPortfolio('portfolio-container', onPortfolioChange);
     setupTaxToggle();
-    setupCalculateButton();
+    setupLiveCalculation();
+    setupTabs();
+    // Run initial calculation
+    calculate();
 });
 
-function onPortfolioChange(allocations) {
-    // Portfolio changed — results will update on next calculate click
+function onPortfolioChange() {
+    scheduleCalculation();
 }
+
+/* ── Debounced Live Calculation ─────────────────────────── */
+
+function scheduleCalculation() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(calculate, 250);
+}
+
+function setupLiveCalculation() {
+    // Attach input listeners to all form fields
+    const inputIds = [
+        'current-age', 'retirement-age', 'plan-until-age',
+        'monthly-expense', 'inflation-rate', 'withdrawal-rate',
+        'post-tax-return'
+    ];
+
+    inputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', scheduleCalculation);
+        }
+    });
+}
+
+/* ── Tax Mode Toggle ────────────────────────────────────── */
 
 function setupTaxToggle() {
     document.querySelectorAll('[data-tax-mode]').forEach(btn => {
@@ -26,13 +55,31 @@ function setupTaxToggle() {
             btn.classList.add('toggle-group__btn--active');
             document.getElementById('simple-tax-input').style.display = currentTaxMode === 'simple' ? '' : 'none';
             document.getElementById('advanced-tax-input').style.display = currentTaxMode === 'advanced' ? '' : 'none';
+            scheduleCalculation();
         });
     });
 }
 
-function setupCalculateButton() {
-    document.getElementById('calculate-btn').addEventListener('click', calculate);
+/* ── Tabs ───────────────────────────────────────────────── */
+
+function setupTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+
+            // Toggle active button
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+            btn.classList.add('tab-btn--active');
+
+            // Toggle active panel
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-panel--active'));
+            const panel = document.getElementById('tab-' + tabId);
+            if (panel) panel.classList.add('tab-panel--active');
+        });
+    });
 }
+
+/* ── Inputs & Validation ────────────────────────────────── */
 
 function getInputs() {
     return {
@@ -48,32 +95,44 @@ function getInputs() {
 
 function validate(inputs) {
     const errors = [];
-    if (inputs.retirementAge <= inputs.currentAge) errors.push('Retirement age must be greater than current age.');
-    if (inputs.planUntilAge <= inputs.retirementAge) errors.push('Plan-until age must be greater than retirement age.');
-    if (inputs.monthlyExpense <= 0) errors.push('Monthly expense must be positive.');
-    if (getTotalWeight() !== 100) errors.push('Portfolio weights must add up to 100%.');
+    if (inputs.retirementAge <= inputs.currentAge) errors.push('retirement-age');
+    if (inputs.planUntilAge <= inputs.retirementAge) errors.push('plan-until-age');
+    if (inputs.monthlyExpense <= 0) errors.push('monthly-expense');
+    if (isNaN(inputs.inflationRate) || isNaN(inputs.withdrawalRate)) errors.push('inflation-rate');
+    if (getTotalWeight() !== 100) errors.push('portfolio');
     return errors;
 }
 
-function showValidationError(inputId) {
+function setFieldError(inputId, hasError) {
     const input = document.getElementById(inputId);
-    input.style.borderColor = 'var(--accent-red)';
-    input.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.15)';
-    setTimeout(() => {
+    if (!input) return;
+    if (hasError) {
+        input.style.borderColor = 'var(--accent-red)';
+        input.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.15)';
+    } else {
         input.style.borderColor = '';
         input.style.boxShadow = '';
-    }, 3000);
+    }
 }
+
+/* ── Calculate ──────────────────────────────────────────── */
 
 function calculate() {
     const inputs = getInputs();
-    const errors = validate(inputs);
+    const errorFields = validate(inputs);
 
-    if (errors.length > 0) {
-        if (inputs.retirementAge <= inputs.currentAge) showValidationError('retirement-age');
-        if (inputs.planUntilAge <= inputs.retirementAge) showValidationError('plan-until-age');
-        if (inputs.monthlyExpense <= 0) showValidationError('monthly-expense');
-        alert(errors.join('\n'));
+    // Clear previous errors
+    ['current-age', 'retirement-age', 'plan-until-age', 'monthly-expense', 'inflation-rate', 'withdrawal-rate'].forEach(id => {
+        setFieldError(id, false);
+    });
+
+    if (errorFields.length > 0) {
+        errorFields.forEach(id => setFieldError(id, true));
+        // Show placeholder dashes when invalid
+        document.getElementById('metric-corpus').textContent = '--';
+        document.getElementById('metric-monthly').textContent = '--';
+        document.getElementById('metric-withdrawn').textContent = '--';
+        document.getElementById('metric-final').textContent = '--';
         return;
     }
 
@@ -118,10 +177,9 @@ function calculate() {
 
     renderProjectionChart('projection-chart', result.projections);
     renderComparisonChart('comparison-chart', comparisonDatasets);
-
-    document.getElementById('results-section').style.display = '';
-    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+/* ── Display Results ────────────────────────────────────── */
 
 function displayResults(result, inputs, split, expectedReturn) {
     const s = result.summary;
@@ -143,6 +201,7 @@ function displayResults(result, inputs, split, expectedReturn) {
         statusEl.innerHTML = '<span class="status-badge status-badge--depleted">✗ Depleted in year ' + s.survivalYears + '</span>';
     }
 
+    // Risk meter
     const riskFill = document.getElementById('risk-fill');
     const riskLabel = document.getElementById('risk-label');
     let riskPct, riskText, riskColor;
@@ -155,14 +214,17 @@ function displayResults(result, inputs, split, expectedReturn) {
     riskLabel.textContent = riskText;
     riskLabel.style.color = riskColor;
 
+    // Equity/Debt split bar
     document.getElementById('split-equity').style.width = split.equity + '%';
     document.getElementById('split-label').textContent = split.equity + ':' + split.debt;
 
+    // Real return
     const realReturn = expectedReturn - inputs.inflationRate;
     const rrDisplay = document.getElementById('real-return-display');
     rrDisplay.textContent = (realReturn * 100).toFixed(1) + '%';
     rrDisplay.style.color = realReturn > 0 ? 'var(--accent-green)' : 'var(--accent-red)';
 
+    // Year-by-year table
     const tbody = document.querySelector('#projection-table tbody');
     tbody.innerHTML = result.projections.map(p =>
         '<tr>' +

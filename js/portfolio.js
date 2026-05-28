@@ -1,6 +1,7 @@
 /**
  * Portfolio Builder UI Module
  * Manages fund selection, weight inputs, preset loading, and weight validation.
+ * Fund picker is collapsed by default — only preset pills + weight bar visible.
  */
 
 import { FUNDS, FUND_CATEGORIES, PRESET_PORTFOLIOS, getFundById } from './data.js';
@@ -16,6 +17,9 @@ let onChangeCallback = null;
 
 /** @type {HTMLElement|null} The portfolio container element */
 let portfolioContainer = null;
+
+/** @type {boolean} Whether the advanced fund picker is expanded */
+let isExpanded = false;
 
 // ─── Category display order ───────────────────────────────────────────────────
 
@@ -129,10 +133,15 @@ function buildPortfolioHTML() {
     <div class="preset-bar">
       ${presetButtonsHTML}
     </div>
-    <div class="fund-picker">
-      ${fundListHTML}
-    </div>
     ${weightBarHTML}
+    <button class="expand-toggle" id="expand-toggle">
+      <span class="expand-toggle__icon">▶</span> Advanced Fund Selection
+    </button>
+    <div class="fund-picker-wrapper fund-picker-wrapper--collapsed" id="fund-picker-wrapper">
+      <div class="fund-picker">
+        ${fundListHTML}
+      </div>
+    </div>
   `;
 }
 
@@ -143,6 +152,21 @@ function buildPortfolioHTML() {
  * @param {HTMLElement} container
  */
 function attachPortfolioEvents(container) {
+  // ── Expand/Collapse toggle ──
+  const expandBtn = container.querySelector('#expand-toggle');
+  if (expandBtn) {
+    expandBtn.addEventListener('click', () => {
+      isExpanded = !isExpanded;
+      const wrapper = container.querySelector('#fund-picker-wrapper');
+      const icon = expandBtn.querySelector('.expand-toggle__icon');
+      if (wrapper) {
+        wrapper.classList.toggle('fund-picker-wrapper--collapsed', !isExpanded);
+        wrapper.classList.toggle('fund-picker-wrapper--expanded', isExpanded);
+      }
+      if (icon) icon.textContent = isExpanded ? '▼' : '▶';
+    });
+  }
+
   // ── Preset buttons ──
   container.querySelectorAll('.preset-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -269,8 +293,7 @@ function updateWeightDisplay() {
 
   const total = getTotalWeight();
 
-  // calcEquityDebtSplit uses fund.type but FUNDS defines fund.assetType,
-  // so we compute the equity/debt split directly here using assetType.
+  // Calculate equity/debt split directly using assetType
   let equityWeight = 0;
   let totalAllocated = 0;
 
@@ -293,8 +316,6 @@ function updateWeightDisplay() {
     debtDisplayPct = 100 - equityDisplayPct;
   }
 
-  // Update fills: widths are relative to the total weight, not necessarily 100%
-  // The track represents the full bar; fills scale proportionally within the total
   const equityFill = portfolioContainer.querySelector('#equity-fill');
   const debtFill = portfolioContainer.querySelector('#debt-fill');
   const equityLabel = portfolioContainer.querySelector('#equity-label');

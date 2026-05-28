@@ -35,8 +35,9 @@
                             <input type="number" id="plan-until-age" value="75" min="50" max="100">
                         </div>
                         <div class="form-group">
-                            <label for="monthly-expense">Monthly Expense Today (₹)</label>
+                            <label for="monthly-expense">Monthly Expense Today</label>
                             <input type="number" id="monthly-expense" value="50000" min="5000" step="1000">
+                            <span class="input-hint">Your current monthly spending in ₹</span>
                         </div>
                         <div class="form-group">
                             <label for="inflation-rate">Inflation Rate (%)</label>
@@ -46,88 +47,72 @@
                         <div class="form-group">
                             <label for="withdrawal-rate">SWP Withdrawal Rate (%)</label>
                             <input type="number" id="withdrawal-rate" value="4" min="1" max="12" step="0.5">
-                            <span class="input-hint">Safe: 3-4%</span>
+                            <span class="input-hint">Safe: 3-4% (the 4% rule)</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 2: Tax Mode Toggle -->
+            <!-- Section 2: Tax + Portfolio in one row -->
             <section class="section animate-in">
                 <div class="card">
-                    <h2 class="card__title">Tax Mode</h2>
-                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <h2 class="card__title" style="margin-bottom: 0;">Tax &amp; Portfolio</h2>
                         <div class="toggle-group">
                             <button class="toggle-group__btn toggle-group__btn--active" data-tax-mode="simple">Simple</button>
                             <button class="toggle-group__btn" data-tax-mode="advanced">Advanced</button>
                         </div>
-                        <div id="simple-tax-input" class="form-group" style="max-width: 250px;">
-                            <label for="post-tax-return">Expected Post-Tax Return (%)</label>
-                            <input type="number" id="post-tax-return" value="8" min="1" max="20" step="0.5">
-                            <span class="input-hint">Conservative: 8%, Moderate: 10%</span>
+                        <div id="simple-tax-input" class="form-group" style="max-width: 220px; margin: 0;">
+                            <label for="post-tax-return" style="font-size: 0.7rem;">Post-Tax Return (%)</label>
+                            <input type="number" id="post-tax-return" value="8" min="1" max="20" step="0.5" style="padding: 0.45rem 0.65rem;">
                         </div>
                         <div id="advanced-tax-input" style="display: none;">
-                            <span class="input-hint">
-                                Equity LTCG: 12.5% (above ₹1.25L exempt) &bull;
-                                Debt: 30% slab rate &bull;
-                                Return calculated from portfolio
-                            </span>
+                            <span class="input-hint">LTCG 12.5% above ₹1.25L &bull; Debt at 30% slab</span>
                         </div>
                     </div>
-                </div>
-            </section>
-
-            <!-- Section 3: Portfolio Builder -->
-            <section class="section animate-in">
-                <div class="card">
-                    <h2 class="card__title">Build Your Portfolio</h2>
                     <div id="portfolio-container"></div>
                 </div>
             </section>
 
-            <!-- Section 4: Calculate Button -->
-            <section class="section" style="text-align: center;">
-                <button class="btn btn--primary" id="calculate-btn">
-                    Calculate My Number
-                </button>
-            </section>
+            <!-- Section 3: Results Dashboard (always visible, updates live) -->
+            <div id="results-section">
 
-            <!-- Section 5: Results Dashboard (hidden initially) -->
-            <div id="results-section" style="display: none;">
-
-                <!-- Metric Cards -->
+                <!-- Metric Cards with tooltips -->
                 <section class="section animate-in">
                     <div class="dashboard">
-                        <div class="metric-card">
+                        <div class="metric-card has-tooltip">
                             <div class="metric-card__label">Corpus Needed</div>
                             <div class="metric-card__value" id="metric-corpus">--</div>
                             <div class="metric-card__sub" id="metric-corpus-sub"></div>
+                            <div class="tooltip">The total amount you need saved by retirement. Calculated as your annual expense at retirement divided by the withdrawal rate.</div>
                         </div>
-                        <div class="metric-card metric-card--green">
+                        <div class="metric-card metric-card--green has-tooltip">
                             <div class="metric-card__label">Monthly at Retirement</div>
                             <div class="metric-card__value" id="metric-monthly">--</div>
                             <div class="metric-card__sub" id="metric-monthly-sub"></div>
+                            <div class="tooltip">Your monthly expense at the time of retirement, adjusted for inflation. This is what ₹50,000 today becomes after years of inflation.</div>
                         </div>
-                        <div class="metric-card metric-card--purple">
+                        <div class="metric-card metric-card--purple has-tooltip">
                             <div class="metric-card__label">Total Withdrawn</div>
                             <div class="metric-card__value" id="metric-withdrawn">--</div>
                             <div class="metric-card__sub" id="metric-withdrawn-sub"></div>
+                            <div class="tooltip">The total amount you will withdraw from your corpus over your entire retirement period, increasing each year with inflation.</div>
                         </div>
-                        <div class="metric-card metric-card--orange">
+                        <div class="metric-card metric-card--orange has-tooltip">
                             <div class="metric-card__label">Final Corpus</div>
                             <div class="metric-card__value" id="metric-final">--</div>
                             <div class="metric-card__sub" id="metric-status"></div>
+                            <div class="tooltip">What remains in your corpus at the end of your plan. If this is positive, your money outlasts you. If zero, the corpus got depleted.</div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Risk Assessment -->
+                <!-- Risk Assessment (compact) -->
                 <section class="section animate-in">
-                    <div class="card">
-                        <h2 class="card__title">Risk Assessment</h2>
-                        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Portfolio Risk Level</div>
+                    <div class="card" style="padding: 1rem 1.5rem;">
+                        <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
+                            <div style="flex: 1; min-width: 150px;">
+                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Risk</div>
                                 <div class="risk-meter">
                                     <div class="risk-meter__bar">
                                         <div class="risk-meter__fill" id="risk-fill" style="width: 50%; background: var(--accent-orange);"></div>
@@ -135,8 +120,8 @@
                                     <div class="risk-meter__label" id="risk-label">Moderate</div>
                                 </div>
                             </div>
-                            <div style="flex: 1; min-width: 200px;">
-                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Equity / Debt Split</div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Equity / Debt</div>
                                 <div class="risk-meter">
                                     <div class="risk-meter__bar">
                                         <div id="split-equity" style="height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); border-radius: 3px; transition: width 0.5s ease;"></div>
@@ -144,56 +129,55 @@
                                     <div class="risk-meter__label" id="split-label">50:50</div>
                                 </div>
                             </div>
-                            <div style="flex: 1; min-width: 200px;">
-                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Real Return (Post Inflation)</div>
-                                <div class="metric-card__value" id="real-return-display" style="font-size: 1.1rem;">--</div>
+                            <div style="min-width: 100px; text-align: center;">
+                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Real Return</div>
+                                <div class="metric-card__value" id="real-return-display" style="font-size: 1rem;">--</div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Projection Chart -->
+                <!-- Tabbed Results -->
                 <section class="section animate-in">
                     <div class="card">
-                        <h2 class="card__title">Corpus Projection</h2>
-                        <div class="chart-container">
-                            <canvas id="projection-chart"></canvas>
+                        <div class="tabs">
+                            <button class="tab-btn tab-btn--active" data-tab="projection">Corpus Projection</button>
+                            <button class="tab-btn" data-tab="comparison">Withdrawal Comparison</button>
+                            <button class="tab-btn" data-tab="table">Year-by-Year</button>
                         </div>
-                    </div>
-                </section>
 
-                <!-- SWP Rate Comparison -->
-                <section class="section animate-in">
-                    <div class="card">
-                        <h2 class="card__title">Withdrawal Rate Comparison</h2>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                            What happens if you withdraw at different rates? Same corpus, different outcomes.
-                        </p>
-                        <div class="chart-container">
-                            <canvas id="comparison-chart"></canvas>
+                        <div class="tab-panel tab-panel--active" id="tab-projection">
+                            <div class="chart-container">
+                                <canvas id="projection-chart"></canvas>
+                            </div>
                         </div>
-                    </div>
-                </section>
 
-                <!-- Year-by-Year Table -->
-                <section class="section animate-in">
-                    <div class="card">
-                        <h2 class="card__title">Year-by-Year Breakdown</h2>
-                        <div style="overflow-x: auto;">
-                            <table class="data-table" id="projection-table">
-                                <thead>
-                                    <tr>
-                                        <th>Year</th>
-                                        <th>Age</th>
-                                        <th>Annual Expense</th>
-                                        <th>Monthly</th>
-                                        <th>Corpus Start</th>
-                                        <th>Returns</th>
-                                        <th>Corpus End</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+                        <div class="tab-panel" id="tab-comparison">
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                Same corpus, different withdrawal rates. See how your money lasts.
+                            </p>
+                            <div class="chart-container">
+                                <canvas id="comparison-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="tab-panel" id="tab-table">
+                            <div style="overflow-x: auto; max-height: 500px; overflow-y: auto;">
+                                <table class="data-table" id="projection-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Year</th>
+                                            <th>Age</th>
+                                            <th>Annual Expense</th>
+                                            <th>Monthly</th>
+                                            <th>Corpus Start</th>
+                                            <th>Returns</th>
+                                            <th>Corpus End</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </section>
