@@ -3,286 +3,644 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retirement Calculator - Escape the Rat Race</title>
-    <link rel="stylesheet" href="css/style.css?v=3.6">
+    <title>LifeAfter40 | Free Retirement Calculator for India | SWP & 4% Rule</title>
+    <meta name="description" content="India's smartest free retirement calculator. Uses real AMFI fund data, Indian tax rules (LTCG, debt slab), SWP simulation, and the 4% rule to find your exact retirement corpus number.">
+    <meta name="keywords" content="retirement calculator india, SWP calculator, 4% rule india, retirement corpus calculator, fire calculator india, mutual fund retirement planning">
+    <meta property="og:title" content="LifeAfter40 | Know Your Retirement Number">
+    <meta property="og:description" content="Free retirement calculator built for Indian markets. Real fund data, Indian tax rules, instant results.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://lifeafter40.in">
+    <link rel="stylesheet" href="css/style.css?v=4.0">
+    <link rel="stylesheet" href="css/landing.css?v=4.0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
 </head>
 <body>
     <canvas id="cosmos-bg"></canvas>
 
-    <div id="app">
-        <header class="header">
-            <h1 class="header__title">Retirement Calculator</h1>
-            <p class="header__subtitle">How much do you need to escape the rat race?</p>
-            <div class="data-provenance" id="data-provenance">Loading fund data…</div>
-        </header>
+    <!-- ══════════════════════════════════════════════════════════
+         NAVIGATION
+         ══════════════════════════════════════════════════════════ -->
 
-        <main>
-            <!-- Section 1: Personal Inputs -->
-            <section class="section animate-in">
-                <div class="card">
-                    <h2 class="card__title">Your Details</h2>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <div class="form-group__label-row">
-                                <label for="current-age">Current Age</label>
-                                <span class="form-group__value-badge" id="badge-current-age">30 Yrs</span>
-                            </div>
-                            <input type="number" id="current-age" value="30" min="18" max="80">
-                            <input type="range" class="form-group__range" id="current-age-range" value="30" min="18" max="80" step="1">
-                        </div>
-                        <div class="form-group">
-                            <div class="form-group__label-row">
-                                <label for="retirement-age">Retirement Age</label>
-                                <span class="form-group__value-badge" id="badge-retirement-age">45 Yrs</span>
-                            </div>
-                            <input type="number" id="retirement-age" value="45" min="25" max="80">
-                            <input type="range" class="form-group__range" id="retirement-age-range" value="45" min="25" max="80" step="1">
-                        </div>
-                        <div class="form-group">
-                            <div class="form-group__label-row">
-                                <label for="plan-until-age">Plan Until Age</label>
-                                <span class="form-group__value-badge" id="badge-plan-until-age">75 Yrs</span>
-                            </div>
-                            <input type="number" id="plan-until-age" value="75" min="50" max="100">
-                            <input type="range" class="form-group__range" id="plan-until-age-range" value="75" min="50" max="100" step="1">
-                        </div>
-                        <div class="form-group">
-                            <div class="form-group__label-row">
-                                <label for="monthly-expense">Monthly Expense Today</label>
-                                <span class="form-group__value-badge" id="badge-monthly-expense">₹50,000</span>
-                            </div>
-                            <input type="number" id="monthly-expense" value="50000" min="5000" step="1000">
-                            <input type="range" class="form-group__range" id="monthly-expense-range" value="50000" min="5000" max="500000" step="5000">
-                            <span class="input-hint">Your current monthly spending in ₹</span>
-                        </div>
-                        <div class="form-group">
-                            <div class="form-group__label-row">
-                                <label for="inflation-rate">Inflation Rate (%)</label>
-                                <span class="form-group__value-badge" id="badge-inflation-rate">6%</span>
-                            </div>
-                            <input type="number" id="inflation-rate" value="6" min="1" max="15" step="0.5">
-                            <input type="range" class="form-group__range" id="inflation-rate-range" value="6" min="1" max="15" step="0.5">
-                            <span class="input-hint">India avg: 5-7%</span>
-                        </div>
-                        <div class="form-group">
-                            <div class="form-group__label-row">
-                                <label for="withdrawal-rate">SWP Withdrawal Rate (%)</label>
-                                <span class="form-group__value-badge" id="badge-withdrawal-rate">4%</span>
-                            </div>
-                            <input type="number" id="withdrawal-rate" value="4" min="1" max="12" step="0.5">
-                            <input type="range" class="form-group__range" id="withdrawal-rate-range" value="4" min="1" max="12" step="0.5">
-                            <span class="input-hint">Safe: 3-4% (the 4% rule)</span>
-                        </div>
+    <nav class="nav" id="main-nav">
+        <div class="nav__inner">
+            <a href="#" class="nav__logo">
+                <span class="nav__logo-icon">🚀</span>
+                <span class="nav__logo-text">LifeAfter40</span>
+            </a>
+            <div class="nav__links" id="nav-links">
+                <a href="#features" class="nav__link">Features</a>
+                <a href="#how-it-works" class="nav__link">How It Works</a>
+                <a href="#faq" class="nav__link">FAQ</a>
+                <a href="#calculator" class="nav__cta-link">Calculate Now</a>
+            </div>
+            <button class="nav__hamburger" id="nav-hamburger" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ══════════════════════════════════════════════════════════
+         HERO SECTION
+         ══════════════════════════════════════════════════════════ -->
+
+    <section class="hero" id="hero">
+        <div class="hero__inner">
+            <div class="hero__content">
+                <div class="hero__badge">
+                    <span class="hero__badge-dot"></span>
+                    100% Free &middot; No Sign-up Required
+                </div>
+                <h1 class="hero__title">
+                    Know Your<br><span class="hero__title-accent">Retirement Number</span>
+                </h1>
+                <p class="hero__subtitle">
+                    India's most accurate free retirement calculator. Built with real AMFI fund data,
+                    Indian tax rules, and the proven 4% withdrawal strategy. Find out exactly
+                    how much you need to escape the rat race.
+                </p>
+                <div class="hero__actions">
+                    <a href="#calculator" class="hero__cta">
+                        Calculate Your Number
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                    <a href="#how-it-works" class="hero__secondary">
+                        See How It Works
+                    </a>
+                </div>
+            </div>
+            <div class="hero__visual" aria-hidden="true">
+                <div class="hero-orbit">
+                    <div class="hero-orbit__core">
+                        <div class="hero-orbit__amount">₹3.59 Cr</div>
+                        <div class="hero-orbit__label">Your Number</div>
                     </div>
-            </section>
-
-            <!-- Section 1.5: Future Financial Milestones -->
-            <section class="section animate-in">
-                <div class="card milestones-card">
-                    <div class="milestones-header" id="milestones-header">
-                        <h2 class="card__title" style="margin-bottom: 0;">Future Financial Milestones</h2>
-                        <span class="expand-toggle__icon" id="milestones-toggle-icon">▶</span>
-                    </div>
-                    
-                    <!-- Collapsible wrapper starting collapsed by default -->
-                    <div class="fund-picker-wrapper fund-picker-wrapper--collapsed" id="milestones-wrapper" style="margin-top: 0;">
-                        <p class="card__subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; margin-bottom: 1.5rem;">
-                            Plan for large one-off expenses during retirement (e.g. child's wedding, house purchase). 
-                            Amounts are entered in today's money and automatically adjusted for inflation.
-                        </p>
-                        
-                        <!-- Milestones List / Empty State -->
-                        <div id="milestones-container" class="milestones-container">
-                            <div class="milestones-empty-state" id="milestones-empty-state">
-                                No milestones added yet. Add a future event below!
-                            </div>
-                            <table class="milestones-table" id="milestones-table" style="display: none;">
-                                <thead>
-                                    <tr>
-                                        <th>Event Name</th>
-                                        <th>Target Age</th>
-                                        <th>Amount Today</th>
-                                        <th>Inflated Value</th>
-                                        <th style="width: 50px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Dynamic rows go here -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Add Milestone Form -->
-                        <div class="milestone-form-wrapper" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
-                            <h3 style="font-family: var(--font-display); font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 1rem; letter-spacing: 1px; text-transform: uppercase;">+ Add Milestone Event</h3>
-                            <div class="milestone-form-grid">
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="milestone-name" style="font-size: 0.75rem;">Event Name</label>
-                                    <input type="text" id="milestone-name" placeholder="e.g. Daughter's Wedding" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="milestone-age" style="font-size: 0.75rem;">Target Age</label>
-                                    <input type="number" id="milestone-age" placeholder="Must be > Retirement Age" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="milestone-amount" style="font-size: 0.75rem;">Amount Today (₹)</label>
-                                    <input type="number" id="milestone-amount" placeholder="e.g. 2000000" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
-                                    <button type="button" id="btn-add-milestone" class="btn btn--accent" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; font-weight: 500; font-family: var(--font-display); letter-spacing: 1px;">Add Event</button>
-                                </div>
-                            </div>
-                            <div id="milestone-error" class="input-hint" style="color: var(--accent-red); margin-top: 0.5rem; display: none;"></div>
-                        </div>
+                    <div class="hero-orbit__ring hero-orbit__ring--1"></div>
+                    <div class="hero-orbit__ring hero-orbit__ring--2"></div>
+                    <div class="hero-orbit__ring hero-orbit__ring--3"></div>
+                    <div class="hero-orbit__sat hero-orbit__sat--1"></div>
+                    <div class="hero-orbit__sat hero-orbit__sat--2"></div>
+                    <div class="hero-orbit__sat hero-orbit__sat--3"></div>
+                </div>
+                <div class="hero-float hero-float--1">
+                    <span class="hero-float__icon">📈</span>
+                    <div>
+                        <div class="hero-float__value">₹1.20 L/mo</div>
+                        <div class="hero-float__label">At Retirement</div>
                     </div>
                 </div>
-            </section>
-
-            <!-- Section 2: Tax + Portfolio -->
-            <section class="section animate-in">
-                <div class="card">
-                    <div class="tax-portfolio-header">
-                        <h2 class="card__title" style="margin-bottom: 0;">Tax &amp; Portfolio</h2>
-                        <div class="toggle-group">
-                            <button class="toggle-group__btn toggle-group__btn--active" data-tax-mode="simple">Simple</button>
-                            <button class="toggle-group__btn" data-tax-mode="advanced">Advanced</button>
-                        </div>
-                        <div id="simple-tax-input" class="form-group" style="max-width: 200px; margin: 0;">
-                            <div class="form-group__label-row">
-                                <label for="post-tax-return" style="font-size: 0.7rem;">Post-Tax Return (%)</label>
-                                <span class="form-group__value-badge" id="badge-post-tax-return" style="font-size: 0.6rem;">8%</span>
-                            </div>
-                            <input type="number" id="post-tax-return" value="8" min="1" max="20" step="0.5" style="padding: 0.45rem 0.65rem;">
-                        </div>
-                        <div id="advanced-tax-input" style="display: none;">
-                            <span class="input-hint">LTCG 12.5% above ₹1.25L &bull; Debt at 30% slab</span>
-                        </div>
+                <div class="hero-float hero-float--2">
+                    <span class="hero-float__icon">🎯</span>
+                    <div>
+                        <div class="hero-float__value">8% Returns</div>
+                        <div class="hero-float__label">Post-Tax CAGR</div>
                     </div>
-                    <div id="portfolio-container"></div>
                 </div>
-            </section>
-
-            <!-- Section 3: Results Dashboard (always visible, updates live) -->
-            <div id="results-section">
-
-                <!-- Metric Cards with tooltips -->
-                <section class="section animate-in">
-                    <div class="dashboard">
-                        <div class="metric-card has-tooltip">
-                            <div class="metric-card__label">Corpus Needed</div>
-                            <div class="metric-card__value" id="metric-corpus">--</div>
-                            <div class="metric-card__sub" id="metric-corpus-sub"></div>
-                            <div class="tooltip">The total amount you need saved by retirement. Calculated as your annual expense at retirement divided by the withdrawal rate.</div>
-                        </div>
-                        <div class="metric-card metric-card--green has-tooltip">
-                            <div class="metric-card__label">Monthly at Retirement</div>
-                            <div class="metric-card__value" id="metric-monthly">--</div>
-                            <div class="metric-card__sub" id="metric-monthly-sub"></div>
-                            <div class="tooltip">Your monthly expense at the time of retirement, adjusted for inflation. This is what ₹50,000 today becomes after years of inflation.</div>
-                        </div>
-                        <div class="metric-card metric-card--purple has-tooltip">
-                            <div class="metric-card__label">Total Withdrawn</div>
-                            <div class="metric-card__value" id="metric-withdrawn">--</div>
-                            <div class="metric-card__sub" id="metric-withdrawn-sub"></div>
-                            <div class="tooltip">The total amount you will withdraw from your corpus over your entire retirement period, increasing each year with inflation.</div>
-                        </div>
-                        <div class="metric-card metric-card--orange has-tooltip">
-                            <div class="metric-card__label">Final Corpus</div>
-                            <div class="metric-card__value" id="metric-final">--</div>
-                            <div class="metric-card__sub" id="metric-status"></div>
-                            <div class="tooltip">What remains in your corpus at the end of your plan. If this is positive, your money outlasts you. If zero, the corpus got depleted.</div>
-                        </div>
+                <div class="hero-float hero-float--3">
+                    <span class="hero-float__icon">✅</span>
+                    <div>
+                        <div class="hero-float__value">Survives</div>
+                        <div class="hero-float__label">30-Year Plan</div>
                     </div>
-                </section>
+                </div>
+            </div>
+        </div>
+        <div class="hero__scroll-hint">
+            <span>Scroll to explore</span>
+            <div class="hero__scroll-arrow"></div>
+        </div>
+    </section>
 
-                <!-- Risk Assessment (compact) -->
-                <section class="section animate-in">
-                    <div class="card risk-card">
-                        <div class="risk-card__inner">
-                            <div class="risk-card__item">
-                                <div class="risk-card__item-label">Risk</div>
-                                <div class="risk-meter">
-                                    <div class="risk-meter__bar">
-                                        <div class="risk-meter__fill" id="risk-fill" style="width: 50%; background: var(--accent-orange);"></div>
-                                    </div>
-                                    <div class="risk-meter__label" id="risk-label">Moderate</div>
-                                </div>
-                            </div>
-                            <div class="risk-card__item">
-                                <div class="risk-card__item-label">Equity / Debt</div>
-                                <div class="risk-meter">
-                                    <div class="risk-meter__bar">
-                                        <div id="split-equity" style="height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); border-radius: 3px; transition: width 0.5s ease;"></div>
-                                    </div>
-                                    <div class="risk-meter__label" id="split-label">50:50</div>
-                                </div>
-                            </div>
-                            <div class="risk-card__item risk-card__item--center">
-                                <div class="risk-card__item-label">Real Return</div>
-                                <div class="metric-card__value" id="real-return-display" style="font-size: 1rem;">--</div>
-                            </div>
-                        </div>
+    <!-- ══════════════════════════════════════════════════════════
+         TRUST STRIP
+         ══════════════════════════════════════════════════════════ -->
+
+    <div class="trust-strip">
+        <div class="trust-strip__inner">
+            <div class="trust-strip__item">
+                <span class="trust-strip__icon">✦</span>
+                <span>100% Free Forever</span>
+            </div>
+            <div class="trust-strip__item">
+                <span class="trust-strip__icon">🔒</span>
+                <span>No Data Stored</span>
+            </div>
+            <div class="trust-strip__item">
+                <span class="trust-strip__icon">🇮🇳</span>
+                <span>Indian Tax Rules Built-in</span>
+            </div>
+            <div class="trust-strip__item">
+                <span class="trust-strip__icon">📊</span>
+                <span>Real AMFI Fund Data</span>
+            </div>
+            <div class="trust-strip__item">
+                <span class="trust-strip__icon">⚡</span>
+                <span>Instant Live Results</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         FEATURES
+         ══════════════════════════════════════════════════════════ -->
+
+    <section class="landing-section" id="features">
+        <div class="landing-container">
+            <div class="section-header reveal">
+                <span class="section-header__tag">Why LifeAfter40</span>
+                <h2 class="section-header__title">Built for Accurate<br>Retirement Planning</h2>
+                <p class="section-header__sub">
+                    Not another generic calculator. LifeAfter40 is purpose-built for Indian markets
+                    with real data, real tax rules, and institutional-grade math.
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card reveal">
+                    <div class="feature-card__icon feature-card__icon--cyan">⚡</div>
+                    <h3 class="feature-card__title">Live Calculations</h3>
+                    <p class="feature-card__desc">Results update instantly as you adjust any input. No buttons to click, no pages to reload. Pure real-time simulation.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-card__icon feature-card__icon--blue">📊</div>
+                    <h3 class="feature-card__title">Real Fund Data</h3>
+                    <p class="feature-card__desc">14+ Indian mutual funds and indices with verified CAGR data across 5, 10, 15, 20, and 25-year horizons from AMFI.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-card__icon feature-card__icon--purple">🏛️</div>
+                    <h3 class="feature-card__title">Indian Tax Modeling</h3>
+                    <p class="feature-card__desc">Accurate LTCG tax at 12.5% above ₹1.25L exemption for equity. Debt taxed at 30% slab. Simple or advanced mode.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-card__icon feature-card__icon--green">📈</div>
+                    <h3 class="feature-card__title">Beautiful Projections</h3>
+                    <p class="feature-card__desc">Interactive charts showing your corpus trajectory, withdrawal patterns, and year-by-year breakdown over decades.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-card__icon feature-card__icon--orange">🎯</div>
+                    <h3 class="feature-card__title">Milestone Planning</h3>
+                    <p class="feature-card__desc">Model large one-off expenses like a child's wedding, home purchase, or education with inflation-adjusted future values.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-card__icon feature-card__icon--red">🔄</div>
+                    <h3 class="feature-card__title">SWP Comparison</h3>
+                    <p class="feature-card__desc">Compare 3%, 4%, 6%, and 8% withdrawal rates side-by-side. See exactly how long your money lasts at each rate.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         HOW IT WORKS
+         ══════════════════════════════════════════════════════════ -->
+
+    <section class="landing-section landing-section--alt" id="how-it-works">
+        <div class="landing-container">
+            <div class="section-header reveal">
+                <span class="section-header__tag">3 Simple Steps</span>
+                <h2 class="section-header__title">See Your Future Wealth<br>in Under a Minute</h2>
+            </div>
+            <div class="steps">
+                <div class="step reveal">
+                    <div class="step__number">1</div>
+                    <div class="step__line"></div>
+                    <div class="step__content">
+                        <h3 class="step__title">Enter Your Details</h3>
+                        <p class="step__desc">Your age, monthly expenses, target retirement age, and inflation assumptions. Drag sliders or type, and results update live.</p>
                     </div>
-                </section>
+                </div>
+                <div class="step reveal">
+                    <div class="step__number">2</div>
+                    <div class="step__line"></div>
+                    <div class="step__content">
+                        <h3 class="step__title">Choose Your Strategy</h3>
+                        <p class="step__desc">Pick from preset portfolios (Conservative, Balanced, Growth, Aggressive) or expand to hand-pick individual funds with custom weights.</p>
+                    </div>
+                </div>
+                <div class="step reveal">
+                    <div class="step__number">3</div>
+                    <div class="step__content">
+                        <h3 class="step__title">See Your Number</h3>
+                        <p class="step__desc">Your exact retirement corpus, monthly withdrawal amount, year-by-year projections, and whether your money outlasts you. All instantly.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                <!-- Tabbed Results -->
+    <!-- ══════════════════════════════════════════════════════════
+         ACCURACY & METHODOLOGY
+         ══════════════════════════════════════════════════════════ -->
+
+    <section class="landing-section" id="accuracy">
+        <div class="landing-container">
+            <div class="section-header reveal">
+                <span class="section-header__tag">Methodology</span>
+                <h2 class="section-header__title">Make Better<br>Financial Decisions</h2>
+                <p class="section-header__sub">
+                    Every number is backed by real data and proven methodology used by financial planners worldwide.
+                </p>
+            </div>
+            <div class="accuracy-grid">
+                <div class="accuracy-card reveal">
+                    <div class="accuracy-card__number">4%</div>
+                    <h3 class="accuracy-card__title">The Withdrawal Rule</h3>
+                    <p class="accuracy-card__desc">Based on William Bengen's 1994 research on the safe withdrawal rate that ensures your corpus survives 30+ years of retirement, even through market crashes.</p>
+                </div>
+                <div class="accuracy-card reveal">
+                    <div class="accuracy-card__number">25Y</div>
+                    <h3 class="accuracy-card__title">Historical Data Depth</h3>
+                    <p class="accuracy-card__desc">Fund returns are sourced across 5, 10, 15, 20, and 25-year CAGR windows, capturing bull runs, recessions, and everything in between.</p>
+                </div>
+                <div class="accuracy-card reveal">
+                    <div class="accuracy-card__number">6%</div>
+                    <h3 class="accuracy-card__title">Inflation Adjusted</h3>
+                    <p class="accuracy-card__desc">Every projection accounts for India's average 5-7% inflation. Your ₹50,000 today becomes ₹1.6L in 20 years, and we model this precisely.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         FAQ
+         ══════════════════════════════════════════════════════════ -->
+
+    <section class="landing-section landing-section--alt" id="faq">
+        <div class="landing-container">
+            <div class="section-header reveal">
+                <span class="section-header__tag">Common Questions</span>
+                <h2 class="section-header__title">Frequently Asked<br>Questions</h2>
+            </div>
+            <div class="faq-list reveal">
+                <div class="faq-item">
+                    <button class="faq-item__q" aria-expanded="false">
+                        <span>What is the 4% rule and why does it matter?</span>
+                        <span class="faq-item__arrow">+</span>
+                    </button>
+                    <div class="faq-item__a">
+                        <p>The 4% rule, established by financial researcher William Bengen in 1994, states that if you withdraw 4% of your retirement corpus in the first year and increase that amount by inflation each subsequent year, your money has a very high probability of lasting 30+ years. This calculator uses this rule as a default but lets you test any withdrawal rate from 1% to 12%.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__q" aria-expanded="false">
+                        <span>How accurate is this calculator for Indian markets?</span>
+                        <span class="faq-item__arrow">+</span>
+                    </button>
+                    <div class="faq-item__a">
+                        <p>Very accurate for planning purposes. We use real CAGR data from 14+ Indian mutual funds and indices sourced from AMFI, apply actual Indian tax rules (12.5% LTCG on equity above ₹1.25L, 30% on debt), and factor in expense ratios. The calculator models inflation-escalated withdrawals year by year, not simplified averages.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__q" aria-expanded="false">
+                        <span>What is SWP (Systematic Withdrawal Plan)?</span>
+                        <span class="faq-item__arrow">+</span>
+                    </button>
+                    <div class="faq-item__a">
+                        <p>SWP is the opposite of SIP. Instead of investing a fixed amount monthly, you withdraw a fixed amount from your mutual fund corpus each month. This calculator simulates SWP across your entire retirement period, increasing withdrawals with inflation each year. It shows whether your corpus survives or gets depleted, and at what year.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__q" aria-expanded="false">
+                        <span>How much money do I need to retire in India?</span>
+                        <span class="faq-item__arrow">+</span>
+                    </button>
+                    <div class="faq-item__a">
+                        <p>It depends on your monthly expenses, target retirement age, and expected returns. As a rough guide: if you spend ₹50,000/month today and want to retire at 45, you'd need approximately ₹3-4 Crores (at 6% inflation and 4% withdrawal rate). This calculator gives you the precise number based on your specific inputs and portfolio choices.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__q" aria-expanded="false">
+                        <span>Is this really free? What's the catch?</span>
+                        <span class="faq-item__arrow">+</span>
+                    </button>
+                    <div class="faq-item__a">
+                        <p>Completely free, no catch. No sign-up, no email, no data collection. The entire application runs in your browser. Nothing is sent to any server. It's an open educational tool inspired by Zero1 by Zerodha's video on retirement planning. We believe everyone deserves access to quality financial planning tools.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__q" aria-expanded="false">
+                        <span>Can I plan for large one-off expenses like a wedding?</span>
+                        <span class="faq-item__arrow">+</span>
+                    </button>
+                    <div class="faq-item__a">
+                        <p>Yes! The Milestones feature lets you add future one-off expenses (child's wedding, home purchase, medical emergency) at specific ages. Amounts are entered in today's money and automatically adjusted for inflation. The calculator then increases your required corpus to account for these lump-sum withdrawals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         FINAL CTA
+         ══════════════════════════════════════════════════════════ -->
+
+    <section class="final-cta reveal">
+        <div class="landing-container">
+            <div class="final-cta__inner">
+                <h2 class="final-cta__title">Ready to Find Your Number?</h2>
+                <p class="final-cta__sub">Your retirement corpus, calculated in under a minute. Completely free.</p>
+                <a href="#calculator" class="hero__cta">
+                    Start Planning Now
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         CALCULATOR (existing — preserved exactly)
+         ══════════════════════════════════════════════════════════ -->
+
+    <section id="calculator" class="calculator-section">
+        <div class="calculator-section__divider">
+            <div class="calculator-section__divider-line"></div>
+            <span class="calculator-section__divider-text">Your Calculator</span>
+            <div class="calculator-section__divider-line"></div>
+        </div>
+
+        <div id="app">
+            <header class="header">
+                <h1 class="header__title">Retirement Calculator</h1>
+                <p class="header__subtitle">How much do you need to escape the rat race?</p>
+                <div class="data-provenance" id="data-provenance">Loading fund data…</div>
+            </header>
+
+            <main>
+                <!-- Section 1: Personal Inputs -->
                 <section class="section animate-in">
                     <div class="card">
-                        <div class="tabs">
-                            <button class="tab-btn tab-btn--active" data-tab="projection"><span class="hide-mobile">Corpus </span>Projection</button>
-                            <button class="tab-btn" data-tab="comparison"><span class="hide-mobile">Withdrawal </span>Comparison</button>
-                            <button class="tab-btn" data-tab="table"><span class="hide-mobile">Year-by-Year</span><span class="show-mobile">Yearly</span></button>
-                        </div>
-
-                        <div class="tab-panel tab-panel--active" id="tab-projection">
-                            <div class="chart-container">
-                                <canvas id="projection-chart"></canvas>
+                        <h2 class="card__title">Your Details</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <div class="form-group__label-row">
+                                    <label for="current-age">Current Age</label>
+                                    <span class="form-group__value-badge" id="badge-current-age">30 Yrs</span>
+                                </div>
+                                <input type="number" id="current-age" value="30" min="18" max="80">
+                                <input type="range" class="form-group__range" id="current-age-range" value="30" min="18" max="80" step="1">
+                            </div>
+                            <div class="form-group">
+                                <div class="form-group__label-row">
+                                    <label for="retirement-age">Retirement Age</label>
+                                    <span class="form-group__value-badge" id="badge-retirement-age">45 Yrs</span>
+                                </div>
+                                <input type="number" id="retirement-age" value="45" min="25" max="80">
+                                <input type="range" class="form-group__range" id="retirement-age-range" value="45" min="25" max="80" step="1">
+                            </div>
+                            <div class="form-group">
+                                <div class="form-group__label-row">
+                                    <label for="plan-until-age">Plan Until Age</label>
+                                    <span class="form-group__value-badge" id="badge-plan-until-age">75 Yrs</span>
+                                </div>
+                                <input type="number" id="plan-until-age" value="75" min="50" max="100">
+                                <input type="range" class="form-group__range" id="plan-until-age-range" value="75" min="50" max="100" step="1">
+                            </div>
+                            <div class="form-group">
+                                <div class="form-group__label-row">
+                                    <label for="monthly-expense">Monthly Expense Today</label>
+                                    <span class="form-group__value-badge" id="badge-monthly-expense">₹50,000</span>
+                                </div>
+                                <input type="number" id="monthly-expense" value="50000" min="5000" step="1000">
+                                <input type="range" class="form-group__range" id="monthly-expense-range" value="50000" min="5000" max="500000" step="5000">
+                                <span class="input-hint">Your current monthly spending in ₹</span>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-group__label-row">
+                                    <label for="inflation-rate">Inflation Rate (%)</label>
+                                    <span class="form-group__value-badge" id="badge-inflation-rate">6%</span>
+                                </div>
+                                <input type="number" id="inflation-rate" value="6" min="1" max="15" step="0.5">
+                                <input type="range" class="form-group__range" id="inflation-rate-range" value="6" min="1" max="15" step="0.5">
+                                <span class="input-hint">India avg: 5-7%</span>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-group__label-row">
+                                    <label for="withdrawal-rate">SWP Withdrawal Rate (%)</label>
+                                    <span class="form-group__value-badge" id="badge-withdrawal-rate">4%</span>
+                                </div>
+                                <input type="number" id="withdrawal-rate" value="4" min="1" max="12" step="0.5">
+                                <input type="range" class="form-group__range" id="withdrawal-rate-range" value="4" min="1" max="12" step="0.5">
+                                <span class="input-hint">Safe: 3-4% (the 4% rule)</span>
                             </div>
                         </div>
+                </section>
 
-                        <div class="tab-panel" id="tab-comparison">
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                                Same corpus, different withdrawal rates. See how your money lasts.
+                <!-- Section 1.5: Future Financial Milestones -->
+                <section class="section animate-in">
+                    <div class="card milestones-card">
+                        <div class="milestones-header" id="milestones-header">
+                            <h2 class="card__title" style="margin-bottom: 0;">Future Financial Milestones</h2>
+                            <span class="expand-toggle__icon" id="milestones-toggle-icon">▶</span>
+                        </div>
+                        <div class="fund-picker-wrapper fund-picker-wrapper--collapsed" id="milestones-wrapper" style="margin-top: 0;">
+                            <p class="card__subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; margin-bottom: 1.5rem;">
+                                Plan for large one-off expenses during retirement (e.g. child's wedding, house purchase).
+                                Amounts are entered in today's money and automatically adjusted for inflation.
                             </p>
-                            <div class="chart-container">
-                                <canvas id="comparison-chart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="tab-panel" id="tab-table">
-                            <div class="table-scroll-wrapper">
-                                <table class="data-table" id="projection-table">
+                            <div id="milestones-container" class="milestones-container">
+                                <div class="milestones-empty-state" id="milestones-empty-state">
+                                    No milestones added yet. Add a future event below!
+                                </div>
+                                <table class="milestones-table" id="milestones-table" style="display: none;">
                                     <thead>
                                         <tr>
-                                            <th>Year</th>
-                                            <th>Age</th>
-                                            <th>Annual Expense</th>
-                                            <th>Monthly</th>
-                                            <th>Corpus Start</th>
-                                            <th>Returns</th>
-                                            <th>Corpus End</th>
+                                            <th>Event Name</th>
+                                            <th>Target Age</th>
+                                            <th>Amount Today</th>
+                                            <th>Inflated Value</th>
+                                            <th style="width: 50px;"></th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
+                            <div class="milestone-form-wrapper" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+                                <h3 style="font-family: var(--font-display); font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 1rem; letter-spacing: 1px; text-transform: uppercase;">+ Add Milestone Event</h3>
+                                <div class="milestone-form-grid">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="milestone-name" style="font-size: 0.75rem;">Event Name</label>
+                                        <input type="text" id="milestone-name" placeholder="e.g. Daughter's Wedding" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="milestone-age" style="font-size: 0.75rem;">Target Age</label>
+                                        <input type="number" id="milestone-age" placeholder="Must be > Retirement Age" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="milestone-amount" style="font-size: 0.75rem;">Amount Today (₹)</label>
+                                        <input type="number" id="milestone-amount" placeholder="e.g. 2000000" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                                        <button type="button" id="btn-add-milestone" class="btn btn--accent" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; font-weight: 500; font-family: var(--font-display); letter-spacing: 1px;">Add Event</button>
+                                    </div>
+                                </div>
+                                <div id="milestone-error" class="input-hint" style="color: var(--accent-red); margin-top: 0.5rem; display: none;"></div>
+                            </div>
                         </div>
                     </div>
                 </section>
-            </div>
-        </main>
 
-        <footer class="footer">
-            <p class="disclaimer">
-                For educational purposes only. This is not financial advice.
-                Past returns do not guarantee future performance.
-                Consult a SEBI-registered financial advisor before making investment decisions.
-            </p>
-        </footer>
-    </div>
+                <!-- Section 2: Tax + Portfolio -->
+                <section class="section animate-in">
+                    <div class="card">
+                        <div class="tax-portfolio-header">
+                            <h2 class="card__title" style="margin-bottom: 0;">Tax &amp; Portfolio</h2>
+                            <div class="toggle-group">
+                                <button class="toggle-group__btn toggle-group__btn--active" data-tax-mode="simple">Simple</button>
+                                <button class="toggle-group__btn" data-tax-mode="advanced">Advanced</button>
+                            </div>
+                            <div id="simple-tax-input" class="form-group" style="max-width: 200px; margin: 0;">
+                                <div class="form-group__label-row">
+                                    <label for="post-tax-return" style="font-size: 0.7rem;">Post-Tax Return (%)</label>
+                                    <span class="form-group__value-badge" id="badge-post-tax-return" style="font-size: 0.6rem;">8%</span>
+                                </div>
+                                <input type="number" id="post-tax-return" value="8" min="1" max="20" step="0.5" style="padding: 0.45rem 0.65rem;">
+                            </div>
+                            <div id="advanced-tax-input" style="display: none;">
+                                <span class="input-hint">LTCG 12.5% above ₹1.25L &bull; Debt at 30% slab</span>
+                            </div>
+                        </div>
+                        <div id="portfolio-container"></div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Results Dashboard -->
+                <div id="results-section">
+                    <section class="section animate-in">
+                        <div class="dashboard">
+                            <div class="metric-card has-tooltip">
+                                <div class="metric-card__label">Corpus Needed</div>
+                                <div class="metric-card__value" id="metric-corpus">--</div>
+                                <div class="metric-card__sub" id="metric-corpus-sub"></div>
+                                <div class="tooltip">The total amount you need saved by retirement. Calculated as your annual expense at retirement divided by the withdrawal rate.</div>
+                            </div>
+                            <div class="metric-card metric-card--green has-tooltip">
+                                <div class="metric-card__label">Monthly at Retirement</div>
+                                <div class="metric-card__value" id="metric-monthly">--</div>
+                                <div class="metric-card__sub" id="metric-monthly-sub"></div>
+                                <div class="tooltip">Your monthly expense at the time of retirement, adjusted for inflation. This is what ₹50,000 today becomes after years of inflation.</div>
+                            </div>
+                            <div class="metric-card metric-card--purple has-tooltip">
+                                <div class="metric-card__label">Total Withdrawn</div>
+                                <div class="metric-card__value" id="metric-withdrawn">--</div>
+                                <div class="metric-card__sub" id="metric-withdrawn-sub"></div>
+                                <div class="tooltip">The total amount you will withdraw from your corpus over your entire retirement period, increasing each year with inflation.</div>
+                            </div>
+                            <div class="metric-card metric-card--orange has-tooltip">
+                                <div class="metric-card__label">Final Corpus</div>
+                                <div class="metric-card__value" id="metric-final">--</div>
+                                <div class="metric-card__sub" id="metric-status"></div>
+                                <div class="tooltip">What remains in your corpus at the end of your plan. If this is positive, your money outlasts you. If zero, the corpus got depleted.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section animate-in">
+                        <div class="card risk-card">
+                            <div class="risk-card__inner">
+                                <div class="risk-card__item">
+                                    <div class="risk-card__item-label">Risk</div>
+                                    <div class="risk-meter">
+                                        <div class="risk-meter__bar">
+                                            <div class="risk-meter__fill" id="risk-fill" style="width: 50%; background: var(--accent-orange);"></div>
+                                        </div>
+                                        <div class="risk-meter__label" id="risk-label">Moderate</div>
+                                    </div>
+                                </div>
+                                <div class="risk-card__item">
+                                    <div class="risk-card__item-label">Equity / Debt</div>
+                                    <div class="risk-meter">
+                                        <div class="risk-meter__bar">
+                                            <div id="split-equity" style="height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); border-radius: 3px; transition: width 0.5s ease;"></div>
+                                        </div>
+                                        <div class="risk-meter__label" id="split-label">50:50</div>
+                                    </div>
+                                </div>
+                                <div class="risk-card__item risk-card__item--center">
+                                    <div class="risk-card__item-label">Real Return</div>
+                                    <div class="metric-card__value" id="real-return-display" style="font-size: 1rem;">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section animate-in">
+                        <div class="card">
+                            <div class="tabs">
+                                <button class="tab-btn tab-btn--active" data-tab="projection"><span class="hide-mobile">Corpus </span>Projection</button>
+                                <button class="tab-btn" data-tab="comparison"><span class="hide-mobile">Withdrawal </span>Comparison</button>
+                                <button class="tab-btn" data-tab="table"><span class="hide-mobile">Year-by-Year</span><span class="show-mobile">Yearly</span></button>
+                            </div>
+                            <div class="tab-panel tab-panel--active" id="tab-projection">
+                                <div class="chart-container">
+                                    <canvas id="projection-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="tab-panel" id="tab-comparison">
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                    Same corpus, different withdrawal rates. See how your money lasts.
+                                </p>
+                                <div class="chart-container">
+                                    <canvas id="comparison-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="tab-panel" id="tab-table">
+                                <div class="table-scroll-wrapper">
+                                    <table class="data-table" id="projection-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Year</th>
+                                                <th>Age</th>
+                                                <th>Annual Expense</th>
+                                                <th>Monthly</th>
+                                                <th>Corpus Start</th>
+                                                <th>Returns</th>
+                                                <th>Corpus End</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         FOOTER
+         ══════════════════════════════════════════════════════════ -->
+
+    <footer class="landing-footer">
+        <div class="landing-container">
+            <div class="landing-footer__inner">
+                <div class="landing-footer__brand">
+                    <span class="nav__logo-icon">🚀</span>
+                    <span class="nav__logo-text" style="font-size: 1rem;">LifeAfter40</span>
+                    <p class="landing-footer__tagline">Plan your financial freedom.</p>
+                </div>
+                <div class="landing-footer__links">
+                    <a href="#features">Features</a>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#faq">FAQ</a>
+                    <a href="#calculator">Calculator</a>
+                </div>
+            </div>
+            <div class="landing-footer__bottom">
+                <p class="disclaimer">
+                    For educational purposes only. This is not financial advice.
+                    Past returns do not guarantee future performance.
+                    Consult a SEBI-registered financial advisor before making investment decisions.
+                </p>
+                <p class="landing-footer__credit">
+                    Inspired by <a href="https://www.youtube.com/@zero1byzerodha" target="_blank" rel="noopener">Zero1 by Zerodha</a>
+                </p>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script type="module" src="js/main.js?v=3.6"></script>
+    <script src="js/landing.js?v=4.0"></script>
 </body>
 </html>

@@ -1096,6 +1096,11 @@ body {
   font-weight: 500;
 }
 
+/* Default: hide mobile-only text, show desktop text */
+.show-mobile {
+  display: none !important;
+}
+
 /* =========================================================
    Responsive — 900px breakpoint (tablets)
    ========================================================= */
@@ -1343,11 +1348,6 @@ body {
 /* =========================================================
    Future Financial Milestones Panel
    ========================================================= */
-
-/* Default hidden responsive text */
-.show-mobile {
-  display: none !important;
-}
 
 /* Clickable Milestones Header Toggle Row */
 .milestones-header {
