@@ -58,10 +58,25 @@
   background-clip: text;
 }
 
+/* Desktop: fixed top-right strip that matches the nav bar.
+   Lives outside <nav> in the DOM so backdrop-filter on .nav--scrolled
+   does NOT create a new containing block that clips this element.
+   No explicit height — use padding so bottom:0 stays free for mobile. */
 .nav__links {
+  position: fixed;
+  top: 0;
+  right: 1.5rem;
   display: flex;
   align-items: center;
   gap: 2rem;
+  padding: 0.75rem 0;
+  z-index: 1001; /* above nav (1000) so it's always interactive */
+  transition: padding 0.3s ease;
+}
+
+/* When nav collapses on scroll, tighten padding to match */
+.nav--scrolled ~ .nav__links {
+  padding: 0.5rem 0;
 }
 
 .nav__link {
@@ -1107,29 +1122,32 @@
    ========================================================= */
 
 @media (max-width: 600px) {
+  /* On mobile, transform nav links into fullscreen overlay */
   .nav__links {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    padding: 0;
     background: rgba(5, 5, 16, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 2.5rem;
-    z-index: 1000;
+    z-index: 1002;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: opacity 0.3s ease, visibility 0.3s ease;
   }
 
   .nav__links--open {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
   }
 
   .nav__links .nav__link {
@@ -1143,7 +1161,7 @@
 
   .nav__hamburger {
     display: flex;
-    z-index: 1001;
+    z-index: 1003;
     position: relative;
   }
 

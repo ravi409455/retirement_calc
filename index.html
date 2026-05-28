@@ -28,17 +28,20 @@
                 <span class="nav__logo-icon">🚀</span>
                 <span class="nav__logo-text">LifeAfter40</span>
             </a>
-            <div class="nav__links" id="nav-links">
-                <a href="#features" class="nav__link">Features</a>
-                <a href="#how-it-works" class="nav__link">How It Works</a>
-                <a href="#faq" class="nav__link">FAQ</a>
-                <a href="#calculator" class="nav__cta-link">Calculate Now</a>
-            </div>
             <button class="nav__hamburger" id="nav-hamburger" aria-label="Toggle menu">
                 <span></span><span></span><span></span>
             </button>
         </div>
     </nav>
+
+    <!-- Mobile nav overlay — lives outside <nav> so backdrop-filter on nav
+         does not create a new containing block that clips this fixed overlay -->
+    <div class="nav__links" id="nav-links">
+        <a href="#features" class="nav__link">Features</a>
+        <a href="#how-it-works" class="nav__link">How It Works</a>
+        <a href="#faq" class="nav__link">FAQ</a>
+        <a href="#calculator" class="nav__cta-link">Calculate Now</a>
+    </div>
 
     <!-- ══════════════════════════════════════════════════════════
          HERO SECTION
