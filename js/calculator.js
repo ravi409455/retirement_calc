@@ -52,7 +52,8 @@ export function calcBlendedReturn(allocations, funds, horizon) {
     if (horizon <= 5)       cagr = fund.cagr5;
     else if (horizon <= 10) cagr = fund.cagr10;
     else if (horizon <= 15) cagr = fund.cagr15;
-    else                    cagr = fund.cagr20;
+    else if (horizon <= 20) cagr = fund.cagr20;
+    else                    cagr = fund.cagr25 || fund.cagr20;
 
     const netReturn = cagr - fund.expenseRatio;
     weightedReturn += weight * netReturn;
@@ -165,6 +166,7 @@ export function runProjection(params) {
     taxRules = {},
     equityPct = 60,
     simpleTaxRate = 0,
+    oneOffEvents = [],
   } = params;
 
   const yearsToRetirement  = retirementAge - currentAge;
@@ -174,16 +176,28 @@ export function runProjection(params) {
   const monthlyAtRetirement = calcInflationAdjusted(monthlyExpense, inflationRate, yearsToRetirement);
   const annualAtRetirement  = monthlyAtRetirement * 12;
 
-  // Corpus required at retirement (baseline at 4% safe SWR target)
-  const corpusNeeded = calcCorpusNeeded(annualAtRetirement, 0.04);
+  // Corpus required at retirement (baseline at user's selected SWR withdrawalRate)
+  const baseCorpusNeeded = calcCorpusNeeded(annualAtRetirement, withdrawalRate);
+  let corpusNeeded = baseCorpusNeeded;
 
-  // Actual starting monthly withdrawal based on user's SWP withdrawalRate input
-  const actualMonthlyWithdrawal = (corpusNeeded * withdrawalRate) / 12;
-  const actualAnnualWithdrawal = actualMonthlyWithdrawal * 12;
+  // Adjust corpus needed for one-off milestone events (PV discounting)
+  for (const event of oneOffEvents) {
+    if (event.age > retirementAge && event.age <= planUntilAge) {
+      const eventFutureVal = calcInflationAdjusted(event.amountToday, inflationRate, event.age - currentAge);
+      const yearsFromRetirement = event.age - retirementAge;
+      const eventDiscountedVal = eventFutureVal / Math.pow(1 + expectedReturn, yearsFromRetirement);
+      corpusNeeded += eventDiscountedVal;
+    }
+  }
+
+  // Actual starting withdrawal matches the inflation-adjusted expense
+  const actualMonthlyWithdrawal = monthlyAtRetirement;
+  const actualAnnualWithdrawal = annualAtRetirement;
 
   // ── Decumulation phase: simulate year-by-year ──
   const projections = [];
   let corpus = corpusNeeded;
+  let costBasis = corpusNeeded; // Track the cost basis of the portfolio
   let totalWithdrawn = 0;
   let totalTaxPaid   = 0;
   let survived       = true;
@@ -196,10 +210,25 @@ export function runProjection(params) {
     const corpusStart   = corpus;
     const returns       = corpusStart * expectedReturn;
 
-    // Tax on returns
+    // Check if there are any one-off events at this age
+    let eventExpense = 0;
+    const eventsAtAge = oneOffEvents.filter(e => e.age === age);
+    for (const e of eventsAtAge) {
+      eventExpense += calcInflationAdjusted(e.amountToday, inflationRate, age - currentAge);
+    }
+
+    const totalWithdrawal = annualExpense + eventExpense;
+
+    // Tax on returns / withdrawals
     let taxPaid = 0;
+    let costBasisWithdrawn = 0;
     if (taxMode === 'advanced') {
-      const { totalTax } = calcTaxAdvanced(returns, equityPct, taxRules);
+      const corpusBeforeWithdrawal = corpusStart + returns;
+      const fraction = corpusBeforeWithdrawal > 0 ? Math.min(1, totalWithdrawal / corpusBeforeWithdrawal) : 0;
+      costBasisWithdrawn = fraction * costBasis;
+      const realizedGain = Math.max(0, totalWithdrawal - costBasisWithdrawn);
+
+      const { totalTax } = calcTaxAdvanced(realizedGain, equityPct, taxRules);
       taxPaid = totalTax;
     } else {
       // simple: tax is already baked into net return via simpleTaxRate
@@ -207,20 +236,22 @@ export function runProjection(params) {
     }
 
     const netReturns = returns - taxPaid;
-    const corpusEnd  = corpusStart + netReturns - annualExpense;
+    // Subtract both baseline living expense and the one-off milestone expense
+    const corpusEnd  = corpusStart + netReturns - totalWithdrawal;
 
     projections.push({
       year,
       age,
-      annualExpense: Math.round(annualExpense),
-      monthlyExpense: Math.round(annualExpense / 12),
+      annualExpense: Math.round(totalWithdrawal),
+      monthlyExpense: Math.round(totalWithdrawal / 12),
       corpusStart:  Math.round(corpusStart),
       returns:      Math.round(returns),
       taxPaid:      Math.round(taxPaid),
       corpusEnd:    Math.round(corpusEnd),
+      oneOffExpense: Math.round(eventExpense),
     });
 
-    totalWithdrawn += annualExpense;
+    totalWithdrawn += totalWithdrawal;
     totalTaxPaid   += taxPaid;
 
     if (corpusEnd <= 0) {
@@ -245,6 +276,9 @@ export function runProjection(params) {
     }
 
     corpus = corpusEnd;
+    if (taxMode === 'advanced') {
+      costBasis = Math.max(0, costBasis - costBasisWithdrawn);
+    }
     // Escalate expense with inflation for next year
     annualExpense = calcInflationAdjusted(actualAnnualWithdrawal, inflationRate, i + 1);
   }
@@ -264,6 +298,7 @@ export function runProjection(params) {
       yearsInRetirement,
       monthlyAtRetirement: Math.round(actualMonthlyWithdrawal),
       annualAtRetirement:  Math.round(actualAnnualWithdrawal),
+      baseCorpusNeeded:    Math.round(baseCorpusNeeded),
       corpusNeeded:        Math.round(corpusNeeded),
       realReturn,
       finalCorpus:         Math.round(finalCorpus),
@@ -284,6 +319,7 @@ export function runProjection(params) {
  *
  * @param {Object} params
  * @param {number} params.corpus
+ * @param {number} params.baseCorpusNeeded
  * @param {number} params.withdrawalRate   Decimal
  * @param {number} params.inflationRate    Decimal
  * @param {number} params.expectedReturn   Decimal
@@ -294,13 +330,18 @@ export function runProjection(params) {
 export function runSWPComparison(params) {
   const {
     corpus: initialCorpus,
+    baseCorpusNeeded,
     withdrawalRate,
     inflationRate,
     expectedReturn,
     years,
+    oneOffEvents = [],
+    currentAge,
+    retirementAge,
   } = params;
 
-  const baseWithdrawal = initialCorpus * withdrawalRate;
+  const expenseBase = baseCorpusNeeded !== undefined ? baseCorpusNeeded : initialCorpus;
+  const baseWithdrawal = expenseBase * withdrawalRate;
   const results = [];
 
   let corpus         = initialCorpus;
@@ -309,18 +350,26 @@ export function runSWPComparison(params) {
   for (let year = 1; year <= years; year++) {
     // Inflation-escalated withdrawal
     const withdrawal = calcInflationAdjusted(baseWithdrawal, inflationRate, year - 1);
+    const age = retirementAge + year - 1;
+
+    // Check for any milestone events in this year
+    let eventExpense = 0;
+    const eventsAtAge = oneOffEvents.filter(e => e.age === age);
+    for (const e of eventsAtAge) {
+      eventExpense += calcInflationAdjusted(e.amountToday, inflationRate, age - currentAge);
+    }
 
     const returns   = corpus * expectedReturn;
-    const corpusEnd = corpus + returns - withdrawal;
+    const corpusEnd = corpus + returns - withdrawal - eventExpense;
 
-    totalWithdrawn += withdrawal;
+    totalWithdrawn += (withdrawal + eventExpense);
 
     const depleted = corpusEnd <= 0;
 
     results.push({
       year,
       corpus:        Math.round(Math.max(0, corpusEnd)),
-      withdrawal:    Math.round(withdrawal),
+      withdrawal:    Math.round(withdrawal + eventExpense),
       totalWithdrawn: Math.round(totalWithdrawn),
       depleted,
     });
@@ -328,12 +377,19 @@ export function runSWPComparison(params) {
     if (depleted) {
       // Fill remaining years as depleted
       for (let y = year + 1; y <= years; y++) {
+        const futureAge = retirementAge + y - 1;
+        let depEventExpense = 0;
+        const depEventsAtAge = oneOffEvents.filter(e => e.age === futureAge);
+        for (const e of depEventsAtAge) {
+          depEventExpense += calcInflationAdjusted(e.amountToday, inflationRate, futureAge - currentAge);
+        }
+
         const futureWithdrawal = calcInflationAdjusted(baseWithdrawal, inflationRate, y - 1);
-        totalWithdrawn += futureWithdrawal;
+        totalWithdrawn += (futureWithdrawal + depEventExpense);
         results.push({
           year: y,
           corpus: 0,
-          withdrawal: Math.round(futureWithdrawal),
+          withdrawal: Math.round(futureWithdrawal + depEventExpense),
           totalWithdrawn: Math.round(totalWithdrawn),
           depleted: true,
         });

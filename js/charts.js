@@ -51,6 +51,60 @@ function getCSSVar(varName, fallback) {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: Draw vertical dotted line and text for milestones
+// ---------------------------------------------------------------------------
+
+const milestonesPlugin = {
+    id: 'milestonesPlugin',
+    afterDatasetsDraw(chart, args, options) {
+        const { ctx, chartArea: { top, bottom } } = chart;
+        const currentMilestones = options.milestones || [];
+        const retirementAge = options.retirementAge || 45;
+
+        currentMilestones.forEach(m => {
+            const yearStr1 = `Yr ${m.age - retirementAge + 1} (Age ${m.age})`;
+            const yearStr2 = `Year ${m.age - retirementAge + 1}`;
+            
+            let index = chart.data.labels.indexOf(yearStr1);
+            if (index === -1) {
+                index = chart.data.labels.indexOf(yearStr2);
+            }
+            if (index === -1) return;
+
+            const meta = chart.getDatasetMeta(0);
+            if (!meta || !meta.data[index]) return;
+            const xPos = meta.data[index].x;
+
+            ctx.save();
+            // Draw dotted line
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.45)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(xPos, top);
+            ctx.lineTo(xPos, bottom);
+            ctx.stroke();
+
+            // Draw small glowing indicator circle
+            ctx.beginPath();
+            ctx.arc(xPos, top + 15, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(34, 211, 238, 1)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(10, 10, 30, 0.95)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Draw text tag near indicator
+            ctx.fillStyle = '#22d3ee';
+            ctx.font = '500 8px Orbitron, monospace';
+            ctx.fillText(m.name.toUpperCase(), xPos + 10, top + 18);
+
+            ctx.restore();
+        });
+    }
+};
+
+// ---------------------------------------------------------------------------
 // Shared Chart.js base options
 // ---------------------------------------------------------------------------
 
@@ -92,7 +146,7 @@ function buildBaseOptions() {
                     label(context) {
                         const label = context.dataset.label ?? '';
                         const value = context.parsed.y;
-                        if (label.includes('Withdrawal') && !label.includes('Annual')) {
+                        if ((label.includes('Withdrawal') || label.includes('SWP')) && !label.includes('Annual')) {
                             return `${label} (Corpus Left): ${formatINR(value)}`;
                         }
                         return `${label}: ${formatINR(value)}`;
@@ -111,6 +165,7 @@ function buildBaseOptions() {
                         family: 'Inter, sans-serif',
                         size: 11,
                     },
+                    maxTicksLimit: window.innerWidth < 600 ? 6 : 15,
                 },
             },
             y: {
@@ -147,7 +202,7 @@ function buildBaseOptions() {
  * @param {Array}  projections - Array of yearly projection rows:
  *   { year, age, annualExpense, monthlyExpense, corpusStart, returns, taxPaid, corpusEnd }
  */
-export function renderProjectionChart(canvasId, projections) {
+export function renderProjectionChart(canvasId, projections, milestones = [], currentAge = 30, retirementAge = 45) {
     if (projectionChart) {
         projectionChart.destroy();
         projectionChart = null;
@@ -161,6 +216,12 @@ export function renderProjectionChart(canvasId, projections) {
     const withdrawalData = projections.map(p => p.annualExpense);
 
     const options = buildBaseOptions();
+
+    // Configure milestones plugin options
+    options.plugins.milestonesPlugin = {
+        milestones,
+        retirementAge,
+    };
 
     // Add the secondary (right) y-axis for withdrawals
     options.scales.y1 = {
@@ -214,6 +275,7 @@ export function renderProjectionChart(canvasId, projections) {
             ],
         },
         options,
+        plugins: [milestonesPlugin],
     });
 }
 
@@ -236,7 +298,7 @@ const COMPARISON_COLORS = [
  * @param {Array}  datasets  - Array of scenario objects:
  *   { label: string, data: [{ corpus, withdrawal, totalWithdrawn, depleted }, ...] }
  */
-export function renderComparisonChart(canvasId, datasets) {
+export function renderComparisonChart(canvasId, datasets, milestones = [], currentAge = 30, retirementAge = 45) {
     if (comparisonChart) {
         comparisonChart.destroy();
         comparisonChart = null;
@@ -264,10 +326,19 @@ export function renderComparisonChart(canvasId, datasets) {
         };
     });
 
+    const options = buildBaseOptions();
+
+    // Configure milestones plugin options
+    options.plugins.milestonesPlugin = {
+        milestones,
+        retirementAge,
+    };
+
     comparisonChart = new Chart(canvas, {
         type: 'line',
         data: { labels, datasets: chartDatasets },
-        options: buildBaseOptions(),
+        options,
+        plugins: [milestonesPlugin],
     });
 }
 

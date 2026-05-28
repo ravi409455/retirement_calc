@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retirement Calculator - Escape the Rat Race</title>
-    <link rel="stylesheet" href="css/style.css?v=3.5">
+    <link rel="stylesheet" href="css/style.css?v=3.6">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
 </head>
 <body>
@@ -73,6 +73,67 @@
                             <input type="number" id="withdrawal-rate" value="4" min="1" max="12" step="0.5">
                             <input type="range" class="form-group__range" id="withdrawal-rate-range" value="4" min="1" max="12" step="0.5">
                             <span class="input-hint">Safe: 3-4% (the 4% rule)</span>
+                        </div>
+                    </div>
+            </section>
+
+            <!-- Section 1.5: Future Financial Milestones -->
+            <section class="section animate-in">
+                <div class="card milestones-card">
+                    <div class="milestones-header" id="milestones-header">
+                        <h2 class="card__title" style="margin-bottom: 0;">Future Financial Milestones</h2>
+                        <span class="expand-toggle__icon" id="milestones-toggle-icon">▶</span>
+                    </div>
+                    
+                    <!-- Collapsible wrapper starting collapsed by default -->
+                    <div class="fund-picker-wrapper fund-picker-wrapper--collapsed" id="milestones-wrapper" style="margin-top: 0;">
+                        <p class="card__subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; margin-bottom: 1.5rem;">
+                            Plan for large one-off expenses during retirement (e.g. child's wedding, house purchase). 
+                            Amounts are entered in today's money and automatically adjusted for inflation.
+                        </p>
+                        
+                        <!-- Milestones List / Empty State -->
+                        <div id="milestones-container" class="milestones-container">
+                            <div class="milestones-empty-state" id="milestones-empty-state">
+                                No milestones added yet. Add a future event below!
+                            </div>
+                            <table class="milestones-table" id="milestones-table" style="display: none;">
+                                <thead>
+                                    <tr>
+                                        <th>Event Name</th>
+                                        <th>Target Age</th>
+                                        <th>Amount Today</th>
+                                        <th>Inflated Value</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic rows go here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Add Milestone Form -->
+                        <div class="milestone-form-wrapper" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+                            <h3 style="font-family: var(--font-display); font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 1rem; letter-spacing: 1px; text-transform: uppercase;">+ Add Milestone Event</h3>
+                            <div class="milestone-form-grid">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="milestone-name" style="font-size: 0.75rem;">Event Name</label>
+                                    <input type="text" id="milestone-name" placeholder="e.g. Daughter's Wedding" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="milestone-age" style="font-size: 0.75rem;">Target Age</label>
+                                    <input type="number" id="milestone-age" placeholder="Must be > Retirement Age" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="milestone-amount" style="font-size: 0.75rem;">Amount Today (₹)</label>
+                                    <input type="number" id="milestone-amount" placeholder="e.g. 2000000" style="padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                                    <button type="button" id="btn-add-milestone" class="btn btn--accent" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; font-weight: 500; font-family: var(--font-display); letter-spacing: 1px;">Add Event</button>
+                                </div>
+                            </div>
+                            <div id="milestone-error" class="input-hint" style="color: var(--accent-red); margin-top: 0.5rem; display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -169,9 +230,9 @@
                 <section class="section animate-in">
                     <div class="card">
                         <div class="tabs">
-                            <button class="tab-btn tab-btn--active" data-tab="projection">Corpus Projection</button>
-                            <button class="tab-btn" data-tab="comparison">Withdrawal Comparison</button>
-                            <button class="tab-btn" data-tab="table">Year-by-Year</button>
+                            <button class="tab-btn tab-btn--active" data-tab="projection"><span class="hide-mobile">Corpus </span>Projection</button>
+                            <button class="tab-btn" data-tab="comparison"><span class="hide-mobile">Withdrawal </span>Comparison</button>
+                            <button class="tab-btn" data-tab="table"><span class="hide-mobile">Year-by-Year</span><span class="show-mobile">Yearly</span></button>
                         </div>
 
                         <div class="tab-panel tab-panel--active" id="tab-projection">
@@ -222,6 +283,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script type="module" src="js/main.js?v=3.5"></script>
+    <script type="module" src="js/main.js?v=3.6"></script>
 </body>
 </html>

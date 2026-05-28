@@ -4,8 +4,8 @@
  * Fund picker is collapsed by default — only preset pills + weight bar visible.
  */
 
-import { FUNDS, FUND_CATEGORIES, PRESET_PORTFOLIOS, getFundById } from './data.js?v=3.5';
-import { calcEquityDebtSplit } from './calculator.js?v=3.5';
+import { FUNDS, FUND_CATEGORIES, PRESET_PORTFOLIOS, getFundById, CRASH_EVENTS } from './data.js?v=3.6';
+import { calcEquityDebtSplit } from './calculator.js?v=3.6';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
 
@@ -88,6 +88,20 @@ function buildPortfolioHTML() {
       (fund) => {
         const dataYears = fund.dataYears || '—';
         const inception = fund.inceptionYear || '—';
+
+        // Weathered crashes list based on inception year
+        const weatheredCrises = (CRASH_EVENTS || []).filter(c => c.year >= fund.inceptionYear);
+        const crisesBadgesHTML = weatheredCrises.map(c => {
+            const labelText = c.label.split(' ')[0]; // e.g. "Global" or "Dot-com"
+            const tooltipText = `${c.label} (${c.year}): Index dropped by ${Math.abs(c.impact)}%. This fund weathered the crash and recovered, yielding a resilient net CAGR.`;
+            return `<span class="crisis-badge" title="${tooltipText}">🛡️ ${labelText} '${String(c.year).slice(-2)}</span>`;
+        }).join('');
+
+        const crisesContainerHTML = weatheredCrises.length > 0 ? `
+          <div class="fund-item__crises">
+            ${crisesBadgesHTML}
+          </div>` : '';
+
         return `
     <div class="fund-item" data-fund-id="${fund.id}">
       <input
@@ -102,6 +116,7 @@ function buildPortfolioHTML() {
         <div class="fund-item__meta">
           <span class="fund-item__category">${fund.category}</span>
           <span class="fund-item__data-years" title="Based on ${dataYears} years of historical data since ${inception}">📊 ${dataYears}Y data</span>
+          ${crisesContainerHTML}
         </div>
       </div>
       <input

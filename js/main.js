@@ -1,8 +1,8 @@
-import { initCosmos } from './cosmos.js?v=3.5';
-import { loadFundData, FUNDS, TAX_RULES, DATA_META } from './data.js?v=3.5';
-import { runProjection, runSWPComparison, calcBlendedReturn, calcEquityDebtSplit, formatINR } from './calculator.js?v=3.5';
-import { initPortfolio, getAllocations, getTotalWeight } from './portfolio.js?v=3.5';
-import { renderProjectionChart, renderComparisonChart } from './charts.js?v=3.5';
+import { initCosmos } from './cosmos.js?v=3.6';
+import { loadFundData, FUNDS, TAX_RULES, DATA_META } from './data.js?v=3.6';
+import { runProjection, runSWPComparison, calcBlendedReturn, calcEquityDebtSplit, formatINR, calcInflationAdjusted } from './calculator.js?v=3.6';
+import { initPortfolio, getAllocations, getTotalWeight } from './portfolio.js?v=3.6';
+import { renderProjectionChart, renderComparisonChart } from './charts.js?v=3.6';
 
 initCosmos('cosmos-bg');
 
@@ -29,6 +29,7 @@ async function bootstrap() {
     setupTaxToggle();
     setupLiveCalculation();
     setupTabs();
+    setupMilestones();
     calculate();
 }
 
@@ -303,19 +304,24 @@ function calculate() {
         taxMode: currentTaxMode,
         taxRules: TAX_RULES,
         equityPct: split.equity,
+        oneOffEvents: milestones,
     });
 
     displayResults(result, inputs, split, expectedReturn);
 
     const comparisonRates = [0.03, 0.04, 0.06, 0.08];
     const comparisonDatasets = comparisonRates.map(rate => ({
-        label: `${(rate * 100).toFixed(0)}% Withdrawal`,
+        label: `${(rate * 100).toFixed(0)}% SWP`,
         data: runSWPComparison({
             corpus: result.summary.corpusNeeded,
+            baseCorpusNeeded: result.summary.baseCorpusNeeded,
             withdrawalRate: rate,
             inflationRate: inputs.inflationRate,
             expectedReturn,
             years: yearsInRetirement,
+            oneOffEvents: milestones,
+            currentAge: inputs.currentAge,
+            retirementAge: inputs.retirementAge,
         }),
     }));
 
@@ -374,7 +380,7 @@ function displayResults(result, inputs, split, expectedReturn) {
     document.getElementById('split-label').textContent = split.equity + ':' + split.debt;
 
     // Real return
-    const realReturn = expectedReturn - inputs.inflationRate;
+    const realReturn = (1 + expectedReturn) / (1 + inputs.inflationRate) - 1;
     const rrDisplay = document.getElementById('real-return-display');
     rrDisplay.textContent = (realReturn * 100).toFixed(1) + '%';
     rrDisplay.style.color = realReturn > 0 ? 'var(--accent-green)' : 'var(--accent-red)';
@@ -392,4 +398,124 @@ function displayResults(result, inputs, split, expectedReturn) {
         '<td style="color:' + (p.corpusEnd > 0 ? 'var(--accent-green)' : 'var(--accent-red)') + '">₹' + formatINR(p.corpusEnd) + '</td>' +
         '</tr>'
     ).join('');
+}
+
+/* ── Milestones Setup & Handlers ─────────────────────────── */
+
+let milestones = [];
+
+function setupMilestones() {
+    // 1. Setup collapsible milestones card header toggle
+    const header = document.getElementById('milestones-header');
+    const wrapper = document.getElementById('milestones-wrapper');
+    const icon = document.getElementById('milestones-toggle-icon');
+    
+    let isExpanded = false; // Collapsed by default
+    
+    if (header && wrapper && icon) {
+        header.addEventListener('click', () => {
+            isExpanded = !isExpanded;
+            wrapper.classList.toggle('fund-picker-wrapper--collapsed', !isExpanded);
+            wrapper.classList.toggle('fund-picker-wrapper--expanded', isExpanded);
+            icon.textContent = isExpanded ? '▼' : '▶';
+        });
+    }
+
+    // 2. Setup milestone event addition
+    const btnAdd = document.getElementById('btn-add-milestone');
+    if (!btnAdd) return;
+
+    btnAdd.addEventListener('click', () => {
+        const nameEl = document.getElementById('milestone-name');
+        const ageEl = document.getElementById('milestone-age');
+        const amountEl = document.getElementById('milestone-amount');
+        const errorEl = document.getElementById('milestone-error');
+
+        if (!nameEl || !ageEl || !amountEl || !errorEl) return;
+
+        const name = nameEl.value.trim();
+        const age = parseInt(ageEl.value);
+        const amountToday = parseFloat(amountEl.value);
+        const inputs = getInputs();
+
+        // Validation
+        if (!name) {
+            showMilestoneError('Please enter a milestone name.');
+            return;
+        }
+        if (isNaN(age) || age <= inputs.retirementAge) {
+            showMilestoneError(`Target age must be greater than your retirement age (${inputs.retirementAge}).`);
+            return;
+        }
+        if (isNaN(amountToday) || amountToday <= 0) {
+            showMilestoneError('Please enter a valid amount greater than ₹0.');
+            return;
+        }
+
+        errorEl.style.display = 'none';
+
+        // Add to milestones list
+        const id = Date.now().toString();
+        milestones.push({ id, name, age, amountToday });
+
+        // Reset inputs
+        nameEl.value = '';
+        ageEl.value = '';
+        amountEl.value = '';
+
+        renderMilestonesTable();
+        calculate();
+    });
+}
+
+function showMilestoneError(msg) {
+    const errorEl = document.getElementById('milestone-error');
+    if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+    }
+}
+
+function renderMilestonesTable() {
+    const container = document.getElementById('milestones-container');
+    const emptyState = document.getElementById('milestones-empty-state');
+    const table = document.getElementById('milestones-table');
+    const tbody = table ? table.querySelector('tbody') : null;
+    const inputs = getInputs();
+
+    if (!container || !emptyState || !table || !tbody) return;
+
+    if (milestones.length === 0) {
+        emptyState.style.display = 'block';
+        table.style.display = 'none';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    table.style.display = 'table';
+
+    tbody.innerHTML = milestones.map(m => {
+        const inflatedVal = calcInflationAdjusted(m.amountToday, inputs.inflationRate, m.age - inputs.currentAge);
+        return `
+            <tr data-milestone-id="${m.id}">
+                <td style="text-align:left; font-weight:500; min-width:120px; word-break:break-word;">${m.name}</td>
+                <td style="text-align:left; min-width:70px;">Age ${m.age}</td>
+                <td style="min-width:100px;">₹${formatINR(m.amountToday)}</td>
+                <td style="color:var(--accent-cyan); min-width:100px;">₹${formatINR(inflatedVal)}</td>
+                <td style="width:40px; text-align:center;">
+                    <button class="btn-delete-milestone" data-milestone-id="${m.id}" title="Delete Milestone">🗑️</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Attach delete listeners
+    tbody.querySelectorAll('.btn-delete-milestone').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.milestoneId;
+            milestones = milestones.filter(m => m.id !== id);
+            renderMilestonesTable();
+            calculate();
+        });
+    });
 }

@@ -1294,6 +1294,14 @@ body {
     font-size: 0.65rem;
     padding: 0.2rem 0.6rem;
   }
+
+  /* Utility classes for responsive text swapping */
+  .hide-mobile {
+    display: none !important;
+  }
+  .show-mobile {
+    display: inline-block !important;
+  }
 }
 
 /* =========================================================
@@ -1306,11 +1314,24 @@ body {
   }
 
   .dashboard {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr); /* Force stable 2-column layout to prevent long cards vertical scrolling */
+    gap: 0.5rem;
+  }
+
+  .metric-card {
+    padding: 0.75rem 0.45rem;
   }
 
   .metric-card__value {
-    font-size: 1.1rem;
+    font-size: 0.92rem; /* Reduce font size slightly so values like ₹11.37 Cr don't wrap and look beautiful */
+  }
+
+  .metric-card__label {
+    font-size: 0.55rem;
+  }
+
+  .metric-card__sub {
+    font-size: 0.6rem;
   }
 
   .tab-btn {
@@ -1318,4 +1339,160 @@ body {
     font-size: 0.5rem;
   }
 }
+
+/* =========================================================
+   Future Financial Milestones Panel
+   ========================================================= */
+
+/* Default hidden responsive text */
+.show-mobile {
+  display: none !important;
+}
+
+/* Clickable Milestones Header Toggle Row */
+.milestones-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.25rem 0;
+}
+
+.milestones-header:hover .card__title {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.45);
+}
+
+.milestones-header:hover .expand-toggle__icon {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.45);
+}
+
+.milestones-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 0.5rem;
+}
+
+.milestones-empty-state {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: rgba(10, 10, 30, 0.3);
+}
+
+.milestones-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+  font-size: 0.85rem;
+}
+
+.milestones-table th,
+.milestones-table td {
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.milestones-table th {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.milestones-table td {
+  color: var(--text-primary);
+  word-break: break-word; /* Enable word break to prevent long custom names from clipping */
+}
+
+.milestones-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.btn-delete-milestone {
+  background: transparent;
+  border: none;
+  color: var(--accent-red);
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s, transform 0.2s;
+  padding: 2px 6px;
+  outline: none;
+}
+
+.btn-delete-milestone:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.milestone-form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 1fr;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+@media (max-width: 768px) {
+  .milestone-form-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+}
+
+/* =========================================================
+   Trust-Building Crisis Weathering Badges
+   ========================================================= */
+
+.fund-picker__category-label {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.fund-item__crises {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.crisis-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: var(--accent-purple);
+  text-shadow: 0 0 4px rgba(139, 92, 246, 0.4);
+  cursor: help;
+  position: relative;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.crisis-badge:hover {
+  background: rgba(139, 92, 246, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Tooltip style overrides for crisis badges */
+.crisis-badge[title]::after {
+  content: attr(title);
+  display: none;
+}
+
 
