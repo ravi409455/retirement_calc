@@ -81,7 +81,7 @@ export function calcEquityDebtSplit(allocations, funds) {
     const fund = fundMap[fundId];
     if (!fund) continue;
     totalWeight += weightPct;
-    if (fund.type === 'equity') equityWeight += weightPct;
+    if (fund.assetType === 'equity') equityWeight += weightPct;
   }
 
   if (totalWeight === 0) return { equity: 0, debt: 100 };
