@@ -4,8 +4,8 @@
  * Fund picker is collapsed by default — only preset pills + weight bar visible.
  */
 
-import { FUNDS, FUND_CATEGORIES, PRESET_PORTFOLIOS, getFundById } from './data.js?v=3.2';
-import { calcEquityDebtSplit } from './calculator.js?v=3.2';
+import { FUNDS, FUND_CATEGORIES, PRESET_PORTFOLIOS, getFundById } from './data.js?v=3.5';
+import { calcEquityDebtSplit } from './calculator.js?v=3.5';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
 

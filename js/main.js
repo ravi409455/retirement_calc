@@ -1,8 +1,8 @@
-import { initCosmos } from './cosmos.js?v=3.2';
-import { loadFundData, FUNDS, TAX_RULES, DATA_META } from './data.js?v=3.2';
-import { runProjection, runSWPComparison, calcBlendedReturn, calcEquityDebtSplit, formatINR } from './calculator.js?v=3.2';
-import { initPortfolio, getAllocations, getTotalWeight } from './portfolio.js?v=3.2';
-import { renderProjectionChart, renderComparisonChart } from './charts.js?v=3.2';
+import { initCosmos } from './cosmos.js?v=3.5';
+import { loadFundData, FUNDS, TAX_RULES, DATA_META } from './data.js?v=3.5';
+import { runProjection, runSWPComparison, calcBlendedReturn, calcEquityDebtSplit, formatINR } from './calculator.js?v=3.5';
+import { initPortfolio, getAllocations, getTotalWeight } from './portfolio.js?v=3.5';
+import { renderProjectionChart, renderComparisonChart } from './charts.js?v=3.5';
 
 initCosmos('cosmos-bg');
 
@@ -35,6 +35,20 @@ async function bootstrap() {
 document.addEventListener('DOMContentLoaded', bootstrap);
 
 function onPortfolioChange() {
+    const allocations = getAllocations();
+    const inputs = getInputs();
+    const yearsInRetirement = Math.max(1, inputs.planUntilAge - inputs.retirementAge);
+    const blended = calcBlendedReturn(allocations, FUNDS, yearsInRetirement);
+
+    if (currentTaxMode === 'simple') {
+        const ptrEl = document.getElementById('post-tax-return');
+        if (ptrEl) {
+            const percentVal = (blended * 100).toFixed(1);
+            ptrEl.value = percentVal;
+            const badge = document.getElementById('badge-post-tax-return');
+            if (badge) badge.textContent = `${percentVal}%`;
+        }
+    }
     scheduleCalculation();
 }
 
@@ -255,11 +269,27 @@ function calculate() {
     const yearsInRetirement = inputs.planUntilAge - inputs.retirementAge;
 
     let expectedReturn;
+    const ptrEl = document.getElementById('post-tax-return');
+    const badge = document.getElementById('badge-post-tax-return');
+
     if (currentTaxMode === 'simple') {
+        if (ptrEl) {
+            ptrEl.disabled = false;
+            ptrEl.style.opacity = '1';
+            ptrEl.style.cursor = 'auto';
+        }
         expectedReturn = inputs.postTaxReturn;
     } else {
         const grossReturn = calcBlendedReturn(allocations, FUNDS, yearsInRetirement);
         expectedReturn = grossReturn;
+        if (ptrEl) {
+            ptrEl.disabled = true;
+            ptrEl.style.opacity = '0.7';
+            ptrEl.style.cursor = 'not-allowed';
+            const percentVal = (grossReturn * 100).toFixed(1);
+            ptrEl.value = percentVal;
+            if (badge) badge.textContent = `${percentVal}%`;
+        }
     }
 
     const result = runProjection({
@@ -304,7 +334,7 @@ function displayResults(result, inputs, split, expectedReturn) {
     document.getElementById('metric-corpus-sub').textContent = `${s.yearsToRetirement} years to build`;
 
     animateValue(document.getElementById('metric-monthly'), prev.monthlyAtRetirement, s.monthlyAtRetirement, 500, true, formatINR);
-    document.getElementById('metric-monthly-sub').textContent = `₹${formatINR(inputs.monthlyExpense)} today → inflation adjusted`;
+    document.getElementById('metric-monthly-sub').textContent = `At ${(inputs.withdrawalRate * 100).toFixed(1)}% SWP rate (₹${formatINR(inputs.monthlyExpense)} today base)`;
 
     animateValue(document.getElementById('metric-withdrawn'), prev.totalWithdrawn, s.totalWithdrawn, 500, true, formatINR);
     document.getElementById('metric-withdrawn-sub').textContent = `Over ${s.survivalYears} years`;

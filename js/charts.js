@@ -92,6 +92,9 @@ function buildBaseOptions() {
                     label(context) {
                         const label = context.dataset.label ?? '';
                         const value = context.parsed.y;
+                        if (label.includes('Withdrawal') && !label.includes('Annual')) {
+                            return `${label} (Corpus Left): ${formatINR(value)}`;
+                        }
                         return `${label}: ${formatINR(value)}`;
                     },
                 },

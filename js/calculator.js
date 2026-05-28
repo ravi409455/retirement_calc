@@ -174,8 +174,12 @@ export function runProjection(params) {
   const monthlyAtRetirement = calcInflationAdjusted(monthlyExpense, inflationRate, yearsToRetirement);
   const annualAtRetirement  = monthlyAtRetirement * 12;
 
-  // Corpus required at retirement
-  const corpusNeeded = calcCorpusNeeded(annualAtRetirement, withdrawalRate);
+  // Corpus required at retirement (baseline at 4% safe SWR target)
+  const corpusNeeded = calcCorpusNeeded(annualAtRetirement, 0.04);
+
+  // Actual starting monthly withdrawal based on user's SWP withdrawalRate input
+  const actualMonthlyWithdrawal = (corpusNeeded * withdrawalRate) / 12;
+  const actualAnnualWithdrawal = actualMonthlyWithdrawal * 12;
 
   // ── Decumulation phase: simulate year-by-year ──
   const projections = [];
@@ -184,7 +188,7 @@ export function runProjection(params) {
   let totalTaxPaid   = 0;
   let survived       = true;
   let survivalYears  = 0;
-  let annualExpense  = annualAtRetirement;
+  let annualExpense  = actualAnnualWithdrawal;
 
   for (let i = 0; i < yearsInRetirement; i++) {
     const year          = i + 1;
@@ -225,7 +229,7 @@ export function runProjection(params) {
       survivalYears = year;
       // Fill remaining years as depleted
       for (let j = i + 1; j < yearsInRetirement; j++) {
-        const futureExpense = calcInflationAdjusted(annualAtRetirement, inflationRate, j);
+        const futureExpense = calcInflationAdjusted(actualAnnualWithdrawal, inflationRate, j);
         projections.push({
           year: j + 1,
           age: retirementAge + j,
@@ -242,7 +246,7 @@ export function runProjection(params) {
 
     corpus = corpusEnd;
     // Escalate expense with inflation for next year
-    annualExpense = calcInflationAdjusted(annualAtRetirement, inflationRate, i + 1);
+    annualExpense = calcInflationAdjusted(actualAnnualWithdrawal, inflationRate, i + 1);
   }
 
   if (survived) survivalYears = yearsInRetirement;
@@ -258,8 +262,8 @@ export function runProjection(params) {
     summary: {
       yearsToRetirement,
       yearsInRetirement,
-      monthlyAtRetirement: Math.round(monthlyAtRetirement),
-      annualAtRetirement:  Math.round(annualAtRetirement),
+      monthlyAtRetirement: Math.round(actualMonthlyWithdrawal),
+      annualAtRetirement:  Math.round(actualAnnualWithdrawal),
       corpusNeeded:        Math.round(corpusNeeded),
       realReturn,
       finalCorpus:         Math.round(finalCorpus),
