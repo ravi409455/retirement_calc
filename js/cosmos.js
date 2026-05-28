@@ -1,4 +1,4 @@
-// cosmos.js — decorative particle background animation
+// cosmos.js — decorative particle background animation with cursor interaction
 export function initCosmos(canvasId) {
   const canvas = document.getElementById(canvasId);
   const ctx = canvas.getContext('2d');
@@ -6,6 +6,22 @@ export function initCosmos(canvasId) {
   let width, height;
   let particles = [];
   let animationId;
+
+  // Cursor tracking state
+  let mouse = { x: null, y: null, radius: 160 };
+
+  const handleMouseMove = (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  };
+
+  const handleMouseLeave = () => {
+    mouse.x = null;
+    mouse.y = null;
+  };
+
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseleave', handleMouseLeave);
 
   function resize() {
     width = canvas.width = window.innerWidth;
@@ -30,6 +46,8 @@ export function initCosmos(canvasId) {
       particles.push({
         x: randomBetween(0, width),
         y: randomBetween(0, height),
+        baseX: 0,
+        baseY: 0,
         size: randomBetween(0.5, 2.5),
         speedX: randomBetween(-0.3, 0.3),
         speedY: randomBetween(-0.3, 0.3),
@@ -38,10 +56,14 @@ export function initCosmos(canvasId) {
         pulseSpeed: randomBetween(0.005, 0.025),
         color: pickColor(),
       });
+      // Store dynamic initial base positions
+      particles[i].baseX = particles[i].x;
+      particles[i].baseY = particles[i].y;
     }
   }
 
   function drawConnections() {
+    // Inter-particle links
     ctx.lineWidth = 0.5;
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
@@ -54,6 +76,24 @@ export function initCosmos(canvasId) {
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Stellar connection to cursor (glowing neon cyan constellation threads)
+    if (mouse.x !== null) {
+      for (let i = 0; i < particles.length; i++) {
+        const dx = mouse.x - particles[i].x;
+        const dy = mouse.y - particles[i].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < mouse.radius) {
+          const alpha = (1 - dist / mouse.radius) * 0.28;
+          ctx.strokeStyle = `rgba(34, 211, 238, ${alpha})`;
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          ctx.moveTo(mouse.x, mouse.y);
+          ctx.lineTo(particles[i].x, particles[i].y);
           ctx.stroke();
         }
       }
@@ -76,15 +116,32 @@ export function initCosmos(canvasId) {
     drawConnections();
 
     for (const p of particles) {
-      // Move
-      p.x += p.speedX;
-      p.y += p.speedY;
+      // Move base position
+      p.baseX += p.speedX;
+      p.baseY += p.speedY;
 
-      // Wrap around edges
-      if (p.x < 0) p.x = width;
-      else if (p.x > width) p.x = 0;
-      if (p.y < 0) p.y = height;
-      else if (p.y > height) p.y = 0;
+      // Wrap base edges
+      if (p.baseX < 0) p.baseX = width;
+      else if (p.baseX > width) p.baseX = 0;
+      if (p.baseY < 0) p.baseY = height;
+      else if (p.baseY > height) p.baseY = 0;
+
+      // Reset coordinates to base coordinates before cursor-displacement calculation
+      p.x = p.baseX;
+      p.y = p.baseY;
+
+      // Apply mouse gravity displacement effect
+      if (mouse.x !== null) {
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < mouse.radius) {
+          const force = (mouse.radius - dist) / mouse.radius; // 0 to 1 force scale
+          // Attract stars towards the cursor
+          p.x += (dx / dist) * force * 15;
+          p.y += (dy / dist) * force * 15;
+        }
+      }
 
       // Pulse opacity
       p.pulse += p.pulseSpeed;
@@ -112,14 +169,19 @@ export function initCosmos(canvasId) {
   createParticles();
   animate();
 
-  window.addEventListener('resize', () => {
+  const handleResize = () => {
     resize();
     createParticles();
-  });
+  };
+
+  window.addEventListener('resize', handleResize);
 
   return {
     destroy() {
       cancelAnimationFrame(animationId);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('resize', handleResize);
     },
   };
 }

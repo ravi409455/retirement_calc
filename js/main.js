@@ -1,25 +1,129 @@
-import { initCosmos } from './cosmos.js';
-import { FUNDS, TAX_RULES } from './data.js';
-import { runProjection, runSWPComparison, calcBlendedReturn, calcEquityDebtSplit, formatINR } from './calculator.js';
-import { initPortfolio, getAllocations, getTotalWeight } from './portfolio.js';
-import { renderProjectionChart, renderComparisonChart } from './charts.js';
+import { initCosmos } from './cosmos.js?v=3.2';
+import { loadFundData, FUNDS, TAX_RULES, DATA_META } from './data.js?v=3.2';
+import { runProjection, runSWPComparison, calcBlendedReturn, calcEquityDebtSplit, formatINR } from './calculator.js?v=3.2';
+import { initPortfolio, getAllocations, getTotalWeight } from './portfolio.js?v=3.2';
+import { renderProjectionChart, renderComparisonChart } from './charts.js?v=3.2';
 
 initCosmos('cosmos-bg');
 
 let currentTaxMode = 'simple';
 let debounceTimer = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+/* ── Bootstrap: load data then init ────────────────────── */
+
+async function bootstrap() {
+    try {
+        await loadFundData();
+    } catch (err) {
+        console.error('[main] Failed to load fund data:', err);
+        return;
+    }
+
+    // Show data provenance badge
+    const metaBadge = document.getElementById('data-provenance');
+    if (metaBadge && DATA_META.lastUpdated) {
+        metaBadge.textContent = `Data as of ${DATA_META.lastUpdated} · Source: ${DATA_META.dataSource || 'AMFI'}`;
+    }
+
     initPortfolio('portfolio-container', onPortfolioChange);
     setupTaxToggle();
     setupLiveCalculation();
     setupTabs();
-    // Run initial calculation
     calculate();
-});
+}
+
+document.addEventListener('DOMContentLoaded', bootstrap);
 
 function onPortfolioChange() {
     scheduleCalculation();
+}
+
+/* ── Slider Synchronization & Badge Helpers ───────────────── */
+
+let previousMetrics = {
+    corpusNeeded: 0,
+    monthlyAtRetirement: 0,
+    totalWithdrawn: 0,
+    finalCorpus: 0
+};
+
+function syncInputs(id, formatFn) {
+    const numInput = document.getElementById(id);
+    const rangeInput = document.getElementById(id + '-range');
+    const badge = document.getElementById('badge-' + id);
+
+    if (!numInput) return;
+
+    const updateBadge = (val) => {
+        if (badge) {
+            badge.textContent = formatFn ? formatFn(val) : val;
+        }
+    };
+
+    // Set initial badge text
+    updateBadge(parseFloat(numInput.value));
+
+    // If no range input exists (e.g. tax field), just sync badge on number input
+    if (!rangeInput) {
+        numInput.addEventListener('input', () => {
+            const val = parseFloat(numInput.value);
+            updateBadge(isNaN(val) ? 0 : val);
+        });
+        return;
+    }
+
+    // Handle number input changes
+    numInput.addEventListener('input', () => {
+        let val = parseFloat(numInput.value);
+        if (isNaN(val)) val = parseFloat(numInput.min) || 0;
+
+        const min = parseFloat(numInput.min);
+        const max = parseFloat(numInput.max);
+        if (!isNaN(min) && val < min) val = min;
+        if (!isNaN(max) && val > max) val = max;
+
+        rangeInput.value = val;
+        updateBadge(val);
+    });
+
+    // Handle range input changes
+    rangeInput.addEventListener('input', () => {
+        const val = parseFloat(rangeInput.value);
+        numInput.value = val;
+        updateBadge(val);
+        scheduleCalculation();
+    });
+}
+
+function animateValue(element, start, end, duration, isRupee = true, formatFn = formatINR) {
+    if (isNaN(start) || start === null) start = 0;
+    if (isNaN(end) || end === null) end = 0;
+
+    if (start === end) {
+        element.textContent = isRupee ? `₹${formatFn(end)}` : formatFn(end);
+        return;
+    }
+
+    const startTime = performance.now();
+
+    function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Easing: easeOutQuad
+        const ease = progress * (2 - progress);
+        const currentVal = start + (end - start) * ease;
+
+        element.textContent = isRupee ? `₹${formatFn(currentVal)}` : formatFn(currentVal);
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = isRupee ? `₹${formatFn(end)}` : formatFn(end);
+        }
+    }
+
+    requestAnimationFrame(update);
 }
 
 /* ── Debounced Live Calculation ─────────────────────────── */
@@ -30,7 +134,17 @@ function scheduleCalculation() {
 }
 
 function setupLiveCalculation() {
-    // Attach input listeners to all form fields
+    // Sync each slider with number inputs and format badges
+    syncInputs('current-age', val => `${val} Yrs`);
+    syncInputs('retirement-age', val => `${val} Yrs`);
+    syncInputs('plan-until-age', val => `${val} Yrs`);
+    syncInputs('monthly-expense', val => `₹${new Intl.NumberFormat('en-IN').format(val)}`);
+    syncInputs('inflation-rate', val => `${val}%`);
+    syncInputs('withdrawal-rate', val => `${val}%`);
+    // Post-tax-return has no slider, just badge sync
+    syncInputs('post-tax-return', val => `${val}%`);
+
+    // Attach standard recalculation input listeners
     const inputIds = [
         'current-age', 'retirement-age', 'plan-until-age',
         'monthly-expense', 'inflation-rate', 'withdrawal-rate',
@@ -183,17 +297,28 @@ function calculate() {
 
 function displayResults(result, inputs, split, expectedReturn) {
     const s = result.summary;
+    const prev = previousMetrics;
 
-    document.getElementById('metric-corpus').textContent = `₹${formatINR(s.corpusNeeded)}`;
+    // Animate numerical dashboard values
+    animateValue(document.getElementById('metric-corpus'), prev.corpusNeeded, s.corpusNeeded, 500, true, formatINR);
     document.getElementById('metric-corpus-sub').textContent = `${s.yearsToRetirement} years to build`;
 
-    document.getElementById('metric-monthly').textContent = `₹${formatINR(s.monthlyAtRetirement)}`;
+    animateValue(document.getElementById('metric-monthly'), prev.monthlyAtRetirement, s.monthlyAtRetirement, 500, true, formatINR);
     document.getElementById('metric-monthly-sub').textContent = `₹${formatINR(inputs.monthlyExpense)} today → inflation adjusted`;
 
-    document.getElementById('metric-withdrawn').textContent = `₹${formatINR(s.totalWithdrawn)}`;
+    animateValue(document.getElementById('metric-withdrawn'), prev.totalWithdrawn, s.totalWithdrawn, 500, true, formatINR);
     document.getElementById('metric-withdrawn-sub').textContent = `Over ${s.survivalYears} years`;
 
-    document.getElementById('metric-final').textContent = `₹${formatINR(s.finalCorpus)}`;
+    animateValue(document.getElementById('metric-final'), prev.finalCorpus, s.finalCorpus, 500, true, formatINR);
+
+    // Update metric cache for next dynamic step
+    previousMetrics = {
+        corpusNeeded: s.corpusNeeded,
+        monthlyAtRetirement: s.monthlyAtRetirement,
+        totalWithdrawn: s.totalWithdrawn,
+        finalCorpus: s.finalCorpus
+    };
+
     const statusEl = document.getElementById('metric-status');
     if (s.survived) {
         statusEl.innerHTML = '<span class="status-badge status-badge--survived">✓ Survives</span>';

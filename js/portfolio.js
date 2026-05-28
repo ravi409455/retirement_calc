@@ -4,8 +4,8 @@
  * Fund picker is collapsed by default — only preset pills + weight bar visible.
  */
 
-import { FUNDS, FUND_CATEGORIES, PRESET_PORTFOLIOS, getFundById } from './data.js';
-import { calcEquityDebtSplit } from './calculator.js';
+import { FUNDS, FUND_CATEGORIES, PRESET_PORTFOLIOS, getFundById } from './data.js?v=3.2';
+import { calcEquityDebtSplit } from './calculator.js?v=3.2';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
 
@@ -21,14 +21,16 @@ let portfolioContainer = null;
 /** @type {boolean} Whether the advanced fund picker is expanded */
 let isExpanded = false;
 
-// ─── Category display order ───────────────────────────────────────────────────
+// ─── Category display order (computed lazily after data loads) ────────────────
 
-const CATEGORY_ORDER = [
-  FUND_CATEGORIES.EQUITY_INDEX,
-  FUND_CATEGORIES.EQUITY_ACTIVE,
-  FUND_CATEGORIES.HYBRID,
-  FUND_CATEGORIES.DEBT,
-];
+function getCategoryOrder() {
+  return [
+    FUND_CATEGORIES.EQUITY_INDEX,
+    FUND_CATEGORIES.EQUITY_ACTIVE,
+    FUND_CATEGORIES.HYBRID,
+    FUND_CATEGORIES.DEBT,
+  ].filter(Boolean);
+}
 
 // ─── 1. Init ──────────────────────────────────────────────────────────────────
 
@@ -72,7 +74,8 @@ function buildPortfolioHTML() {
   ).join('');
 
   // ── Fund list grouped by category ──
-  const fundListHTML = CATEGORY_ORDER.map((category) => {
+  const categoryOrder = getCategoryOrder();
+  const fundListHTML = categoryOrder.map((category) => {
     const fundsInCategory = FUNDS.filter((f) => f.category === category);
     if (fundsInCategory.length === 0) return '';
 
@@ -82,7 +85,10 @@ function buildPortfolioHTML() {
     </div>`;
 
     const fundItemsHTML = fundsInCategory.map(
-      (fund) => `
+      (fund) => {
+        const dataYears = fund.dataYears || '—';
+        const inception = fund.inceptionYear || '—';
+        return `
     <div class="fund-item" data-fund-id="${fund.id}">
       <input
         class="fund-item__checkbox"
@@ -93,7 +99,10 @@ function buildPortfolioHTML() {
       />
       <div class="fund-item__info">
         <div class="fund-item__name" title="${fund.description}">${fund.name}</div>
-        <div class="fund-item__category">${fund.category}</div>
+        <div class="fund-item__meta">
+          <span class="fund-item__category">${fund.category}</span>
+          <span class="fund-item__data-years" title="Based on ${dataYears} years of historical data since ${inception}">📊 ${dataYears}Y data</span>
+        </div>
       </div>
       <input
         class="fund-item__weight"
@@ -107,7 +116,8 @@ function buildPortfolioHTML() {
         aria-label="${fund.name} weight percentage"
         placeholder="0"
       />
-    </div>`
+    </div>`;
+      }
     ).join('');
 
     return categoryLabel + fundItemsHTML;
@@ -153,6 +163,7 @@ function buildPortfolioHTML() {
  */
 function attachPortfolioEvents(container) {
   // ── Expand/Collapse toggle ──
+  // Always starts collapsed (isExpanded = false)
   const expandBtn = container.querySelector('#expand-toggle');
   if (expandBtn) {
     expandBtn.addEventListener('click', () => {

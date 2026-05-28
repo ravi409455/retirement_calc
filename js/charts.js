@@ -41,6 +41,16 @@ function formatAxisTick(value) {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: Resolve CSS variable color for canvas text
+// ---------------------------------------------------------------------------
+
+function getCSSVar(varName, fallback) {
+    if (typeof window === 'undefined') return fallback;
+    const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    return val || fallback;
+}
+
+// ---------------------------------------------------------------------------
 // Shared Chart.js base options
 // ---------------------------------------------------------------------------
 
@@ -55,7 +65,7 @@ function buildBaseOptions() {
         plugins: {
             legend: {
                 labels: {
-                    color: 'var(--text-secondary, rgba(180,190,220,0.8))',
+                    color: getCSSVar('--text-secondary', 'rgba(195, 210, 255, 0.85)'),
                     font: {
                         family: 'Inter, sans-serif',
                         size: 11,

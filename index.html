@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retirement Calculator - Escape the Rat Race</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
 </head>
 <body>
@@ -14,6 +14,7 @@
         <header class="header">
             <h1 class="header__title">Retirement Calculator</h1>
             <p class="header__subtitle">How much do you need to escape the rat race?</p>
+            <div class="data-provenance" id="data-provenance">Loading fund data…</div>
         </header>
 
         <main>
@@ -23,47 +24,74 @@
                     <h2 class="card__title">Your Details</h2>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="current-age">Current Age</label>
+                            <div class="form-group__label-row">
+                                <label for="current-age">Current Age</label>
+                                <span class="form-group__value-badge" id="badge-current-age">30 Yrs</span>
+                            </div>
                             <input type="number" id="current-age" value="30" min="18" max="80">
+                            <input type="range" class="form-group__range" id="current-age-range" value="30" min="18" max="80" step="1">
                         </div>
                         <div class="form-group">
-                            <label for="retirement-age">Retirement Age</label>
+                            <div class="form-group__label-row">
+                                <label for="retirement-age">Retirement Age</label>
+                                <span class="form-group__value-badge" id="badge-retirement-age">45 Yrs</span>
+                            </div>
                             <input type="number" id="retirement-age" value="45" min="25" max="80">
+                            <input type="range" class="form-group__range" id="retirement-age-range" value="45" min="25" max="80" step="1">
                         </div>
                         <div class="form-group">
-                            <label for="plan-until-age">Plan Until Age</label>
+                            <div class="form-group__label-row">
+                                <label for="plan-until-age">Plan Until Age</label>
+                                <span class="form-group__value-badge" id="badge-plan-until-age">75 Yrs</span>
+                            </div>
                             <input type="number" id="plan-until-age" value="75" min="50" max="100">
+                            <input type="range" class="form-group__range" id="plan-until-age-range" value="75" min="50" max="100" step="1">
                         </div>
                         <div class="form-group">
-                            <label for="monthly-expense">Monthly Expense Today</label>
+                            <div class="form-group__label-row">
+                                <label for="monthly-expense">Monthly Expense Today</label>
+                                <span class="form-group__value-badge" id="badge-monthly-expense">₹50,000</span>
+                            </div>
                             <input type="number" id="monthly-expense" value="50000" min="5000" step="1000">
+                            <input type="range" class="form-group__range" id="monthly-expense-range" value="50000" min="5000" max="500000" step="5000">
                             <span class="input-hint">Your current monthly spending in ₹</span>
                         </div>
                         <div class="form-group">
-                            <label for="inflation-rate">Inflation Rate (%)</label>
+                            <div class="form-group__label-row">
+                                <label for="inflation-rate">Inflation Rate (%)</label>
+                                <span class="form-group__value-badge" id="badge-inflation-rate">6%</span>
+                            </div>
                             <input type="number" id="inflation-rate" value="6" min="1" max="15" step="0.5">
+                            <input type="range" class="form-group__range" id="inflation-rate-range" value="6" min="1" max="15" step="0.5">
                             <span class="input-hint">India avg: 5-7%</span>
                         </div>
                         <div class="form-group">
-                            <label for="withdrawal-rate">SWP Withdrawal Rate (%)</label>
+                            <div class="form-group__label-row">
+                                <label for="withdrawal-rate">SWP Withdrawal Rate (%)</label>
+                                <span class="form-group__value-badge" id="badge-withdrawal-rate">4%</span>
+                            </div>
                             <input type="number" id="withdrawal-rate" value="4" min="1" max="12" step="0.5">
+                            <input type="range" class="form-group__range" id="withdrawal-rate-range" value="4" min="1" max="12" step="0.5">
                             <span class="input-hint">Safe: 3-4% (the 4% rule)</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 2: Tax + Portfolio in one row -->
+            <!-- Section 2: Tax + Portfolio -->
             <section class="section animate-in">
                 <div class="card">
-                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <div class="tax-portfolio-header">
                         <h2 class="card__title" style="margin-bottom: 0;">Tax &amp; Portfolio</h2>
                         <div class="toggle-group">
                             <button class="toggle-group__btn toggle-group__btn--active" data-tax-mode="simple">Simple</button>
                             <button class="toggle-group__btn" data-tax-mode="advanced">Advanced</button>
                         </div>
-                        <div id="simple-tax-input" class="form-group" style="max-width: 220px; margin: 0;">
-                            <label for="post-tax-return" style="font-size: 0.7rem;">Post-Tax Return (%)</label>
+                        <div id="simple-tax-input" class="form-group" style="max-width: 200px; margin: 0;">
+                            <div class="form-group__label-row">
+                                <label for="post-tax-return" style="font-size: 0.7rem;">Post-Tax Return (%)</label>
+                                <span class="form-group__value-badge" id="badge-post-tax-return" style="font-size: 0.6rem;">8%</span>
+                            </div>
                             <input type="number" id="post-tax-return" value="8" min="1" max="20" step="0.5" style="padding: 0.45rem 0.65rem;">
                         </div>
                         <div id="advanced-tax-input" style="display: none;">
@@ -109,10 +137,10 @@
 
                 <!-- Risk Assessment (compact) -->
                 <section class="section animate-in">
-                    <div class="card" style="padding: 1rem 1.5rem;">
-                        <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
-                            <div style="flex: 1; min-width: 150px;">
-                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Risk</div>
+                    <div class="card risk-card">
+                        <div class="risk-card__inner">
+                            <div class="risk-card__item">
+                                <div class="risk-card__item-label">Risk</div>
                                 <div class="risk-meter">
                                     <div class="risk-meter__bar">
                                         <div class="risk-meter__fill" id="risk-fill" style="width: 50%; background: var(--accent-orange);"></div>
@@ -120,8 +148,8 @@
                                     <div class="risk-meter__label" id="risk-label">Moderate</div>
                                 </div>
                             </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Equity / Debt</div>
+                            <div class="risk-card__item">
+                                <div class="risk-card__item-label">Equity / Debt</div>
                                 <div class="risk-meter">
                                     <div class="risk-meter__bar">
                                         <div id="split-equity" style="height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); border-radius: 3px; transition: width 0.5s ease;"></div>
@@ -129,8 +157,8 @@
                                     <div class="risk-meter__label" id="split-label">50:50</div>
                                 </div>
                             </div>
-                            <div style="min-width: 100px; text-align: center;">
-                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Real Return</div>
+                            <div class="risk-card__item risk-card__item--center">
+                                <div class="risk-card__item-label">Real Return</div>
                                 <div class="metric-card__value" id="real-return-display" style="font-size: 1rem;">--</div>
                             </div>
                         </div>
@@ -162,7 +190,7 @@
                         </div>
 
                         <div class="tab-panel" id="tab-table">
-                            <div style="overflow-x: auto; max-height: 500px; overflow-y: auto;">
+                            <div class="table-scroll-wrapper">
                                 <table class="data-table" id="projection-table">
                                     <thead>
                                         <tr>
@@ -194,6 +222,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/main.js?v=3.2"></script>
 </body>
 </html>
